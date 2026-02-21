@@ -67,6 +67,7 @@ writeFileSync(join(projectDir, 'package.json'), JSON.stringify({
         build: 'tsc',
         demo: 'node build/agent.js',
         doctor: 'npx silo-agent doctor',
+        start: 'npx silo-agent start',
     },
     dependencies: {
         'silo-agent': '^1.0.0',
@@ -219,6 +220,10 @@ npm install
 
 # Build and run the demo
 npm run build
+npm run doctor
+npm start
+
+# Or to run the standalone demo script
 npm run demo
 \`\`\`
 
@@ -258,6 +263,6 @@ try {
 log(`\n${GREEN}${BOLD}Done!${RESET} Your SILO agent is ready.\n`);
 log(`  ${CYAN}cd ${projectName}${RESET}`);
 log(`  ${DIM}# Edit .env with your private key${RESET}`);
-log(`  ${CYAN}npm run build && npm run demo${RESET}\n`);
+log(`  ${CYAN}npm run build && npm run doctor && npm start${RESET}\n`);
 log(`  ${DIM}To connect to Claude Desktop:${RESET}`);
 log(`  ${DIM}Copy claude-desktop-config.json into your Claude config${RESET}\n`);

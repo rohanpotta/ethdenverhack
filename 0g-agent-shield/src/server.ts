@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);

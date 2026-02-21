@@ -1,6 +1,6 @@
 {
   "name": "silo-agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Encrypted private memory + execution attestation for AI agents on 0G",
   "type": "module",
   "main": "./build/index.js",
