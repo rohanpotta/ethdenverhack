@@ -21,7 +21,7 @@ interface VaultEvent {
   data: Record<string, any>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const DEFAULT_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const NAV_ITEMS: { id: View; label: string }[] = [
   { id: 'guide', label: 'GUIDE' },
@@ -56,8 +56,12 @@ function App() {
     traceTxHash: string;
   } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
+  const [attesting, setAttesting] = useState(false);
 
   const [stats, setStats] = useState({ stores: 0, retrieves: 0, bytes: 0, avgCommitMs: 0 });
+  const [apiUrl, setApiUrl] = useState(() => localStorage.getItem('silo_api_url') || DEFAULT_API_URL);
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [tempUrl, setTempUrl] = useState('');
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -66,8 +70,16 @@ function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // WebSocket Connection
   useEffect(() => {
-    const s = io(API_URL, {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    setConnected(false);
+    setReconnecting(true);
+
+    const s = io(apiUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
@@ -91,13 +103,15 @@ function App() {
     });
 
     socketRef.current = s;
-    fetch(`${API_URL}/api/events`)
+
+    // Fetch initial history
+    fetch(`${apiUrl}/api/events`)
       .then(r => r.json())
       .then((data: VaultEvent[]) => setEvents(data.reverse()))
       .catch(() => { });
 
     return () => { s.disconnect(); };
-  }, []);
+  }, [apiUrl]);
 
   useEffect(() => {
     const stores = events.filter(e => e.type === 'store').length;
@@ -173,7 +187,7 @@ function App() {
         </div>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 label-caps">
+          <div className="flex items-center gap-4 label-caps hidden md:flex">
             <span>{stats.stores} <span className="text-accent-store">stores</span></span>
             <span className="text-text-muted/30">·</span>
             <span>{stats.retrieves} <span className="text-accent-retrieve">retrieves</span></span>
@@ -181,14 +195,50 @@ function App() {
             <span>{stats.bytes > 1024 ? (stats.bytes / 1024).toFixed(1) + 'K' : stats.bytes} <span className="text-text-muted">bytes</span></span>
           </div>
 
-          <div className="flex items-center gap-2">
-            {reconnecting ? (
-              <span className="label-caps text-accent-gold">Reconnecting...</span>
+          <div className="h-4 w-px bg-border hidden md:block" />
+
+          <div className="flex items-center gap-3 bg-base-elevated/50 px-3 py-1.5 rounded border border-border/50">
+            {isEditingUrl ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={tempUrl}
+                  onChange={e => setTempUrl(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      let finalUrl = tempUrl.trim().replace(/\/$/, '');
+                      if (!finalUrl.startsWith('http')) finalUrl = `https://${finalUrl}`;
+                      setApiUrl(finalUrl);
+                      localStorage.setItem('silo_api_url', finalUrl);
+                      setIsEditingUrl(false);
+                      setToast({ message: `Connecting to ${finalUrl}...`, type: 'info' });
+                    }
+                    if (e.key === 'Escape') setIsEditingUrl(false);
+                  }}
+                  autoFocus
+                  onBlur={() => setIsEditingUrl(false)}
+                  className="bg-base border border-primary/50 text-xs font-mono px-2 py-0.5 rounded w-48 text-text-primary focus:outline-none focus:border-primary"
+                  placeholder="https://your-ngrok-url.app"
+                />
+                <span className="text-[9px] text-text-muted uppercase tracking-wider">Press Enter</span>
+              </div>
             ) : (
-              <>
-                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-primary glow-ring-primary' : 'bg-accent-danger'}`} />
-                <span className="label-caps">{connected ? 'Live' : 'Offline'}</span>
-              </>
+              <button
+                onClick={() => { setTempUrl(apiUrl); setIsEditingUrl(true); }}
+                className="flex items-center gap-2 group cursor-pointer"
+                title="Click to change backend URL (use ngrok if dashboard is deployed)"
+              >
+                <div className="flex items-center gap-2">
+                  {reconnecting ? (
+                    <span className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
+                  ) : (
+                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-primary glow-ring-primary' : 'bg-accent-danger'}`} />
+                  )}
+                  <span className="text-[10px] font-mono text-text-muted group-hover:text-text-primary transition-colors truncate max-w-[120px] sm:max-w-[200px]">
+                    {apiUrl.replace(/^https?:\/\//, '')}
+                  </span>
+                </div>
+              </button>
             )}
           </div>
         </div>
@@ -242,10 +292,10 @@ function App() {
                 setToast({ message: 'Backend offline — run the Silo server locally on :3000 to commit sessions', type: 'info' });
                 return;
               }
-              const btn = document.activeElement as HTMLButtonElement;
-              btn?.classList.add('animate-pulse');
+              if (attesting) return;
+              setAttesting(true);
               try {
-                const res = await fetch(`${API_URL}/api/attest`, { method: 'POST' });
+                const res = await fetch(`${apiUrl}/api/attest`, { method: 'POST' });
                 if (!res.ok) {
                   const err = await res.json().catch(() => ({ error: 'Commit failed' }));
                   setToast({ message: `Commit failed: ${err.error || 'Unknown error'}`, type: 'error' });
@@ -253,16 +303,19 @@ function App() {
               } catch {
                 setToast({ message: 'Backend not reachable — is the Silo server running on localhost:3000?', type: 'error' });
               } finally {
-                btn?.classList.remove('animate-pulse');
+                setAttesting(false);
               }
             }}
-            className={`w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 ${connected
-              ? 'text-text-muted hover:text-accent-commit hover:bg-accent-commit/10'
-              : 'text-text-muted/30 cursor-not-allowed opacity-50'
+            disabled={attesting}
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 ${attesting
+              ? 'text-accent-commit animate-pulse cursor-wait'
+              : connected
+                ? 'text-text-muted hover:text-accent-commit hover:bg-accent-commit/10'
+                : 'text-text-muted/30 cursor-not-allowed opacity-50'
               }`}
-            title={connected ? 'Commit session — attest Merkle root on-chain' : 'Backend offline — run Silo server locally to enable commits'}
+            title={attesting ? 'Committing session on-chain...' : connected ? 'Commit session — attest Merkle root on-chain' : 'Backend offline — run Silo server locally to enable commits'}
           >
-            <span className="text-[9px] font-semibold tracking-wider">ATT</span>
+            <span className="text-[9px] font-semibold tracking-wider">{attesting ? '...' : 'ATT'}</span>
           </button>
         </nav>
 

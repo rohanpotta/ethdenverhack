@@ -85,41 +85,99 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                 </ul>
             </div>
 
-            {/* Step-by-step */}
+            {/* Hackathon Demo Flow */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps">Setup in 3 Steps</span>
+                    <span className="label-caps">For the Hackathon Demo</span>
+                </div>
+                <div className="space-y-4">
+                    <StepCard step={1} title="Start the Services">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 1: Backend</div>
+                                <CopyBlock code={`cd 0g-agent-shield
+npm run build
+npm run doctor
+npm start`} />
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 2: Dashboard</div>
+                                <CopyBlock code={`cd 0g-agent-shield-ui
+npm run dev`} />
+                            </div>
+                        </div>
+                    </StepCard>
+
+                    <StepCard step={2} title="(Optional) Ngrok tunnel for Vercel">
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            Run this to make your local backend accessible to the world:
+                        </p>
+                        <CopyBlock code={`ngrok http 3000`} />
+                        <p className="text-xs text-text-muted mt-3 leading-relaxed">
+                            Copy the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL.
+                            If you deploy the dashboard to Vercel, paste this URL into the <strong className="text-text-primary">Live/Offline</strong> indicator
+                            in the top-right corner to connect.
+                        </p>
+                    </StepCard>
+
+                    <StepCard step={3} title="Run the Demo">
+                        <ul className="text-xs text-text-muted space-y-2 leading-relaxed list-disc list-inside marker:text-primary">
+                            <li>Open <code className="text-primary bg-primary/10 px-1 rounded">http://localhost:5173</code> (or Vercel URL with tunnel)</li>
+                            <li><strong>GUIDE</strong> tab walks you through everything</li>
+                            <li>Go to <strong>VAULT</strong> tab → type sensitive data → click "Encrypt & Store on 0G"</li>
+                            <li>Watch <strong className="text-text-primary">HexCascade</strong> animation as data encrypts</li>
+                            <li>Copy the root hash → switch to <strong className="text-text-primary">Retrieve</strong> tab → paste → click Decrypt</li>
+                            <li>Click <strong className="text-text-primary">ATT</strong> button in sidebar → triggers CommitCeremony animation</li>
+                            <li><strong>MERKLE</strong> tab shows live D3 tree visualization</li>
+                            <li><strong>AGENTS</strong> tab shows sub-agent spawning</li>
+                            <li><strong>LOG</strong> tab shows full real-time event stream</li>
+                        </ul>
+                    </StepCard>
+                </div>
+            </div>
+
+            {/* Step-by-step for Devs */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="label-caps mt-8">For Real Developers Using Your Tool</span>
                 </div>
 
                 <div className="space-y-4">
-                    <StepCard step={1} title="Install">
-                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
-                            <strong className="text-text-primary">Option A:</strong> Scaffold a new agent project
-                        </p>
+                    <StepCard step={1} title="Option A — Scaffold a new project (recommended)">
                         <CopyBlock code={`npx create-silo-app my-agent
-cd my-agent`} />
-                        <p className="text-xs text-text-muted mt-3 mb-3 leading-relaxed">
-                            <strong className="text-text-primary">Option B:</strong> Add to an existing project
-                        </p>
-                        <CopyBlock code={`npm install silo-agent`} />
+cd my-agent
+# Edit .env with your 0G private key
+npm run build && npm run doctor && npm run demo`} />
                         <p className="text-xs text-text-muted mt-3 leading-relaxed">
-                            Edit <code className="text-primary bg-primary/10 px-1 rounded">.env</code> and
-                            add your 0G/EVM wallet private key (64-char hex, no 0x prefix).
                             Need a wallet? Export from MetaMask, or generate one: <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>.
                             Fund it with testnet tokens at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
                     </StepCard>
 
-                    <StepCard step={2} title="Build & Validate">
-                        <CopyBlock code={`npm run build
-npm run doctor`} />
-                        <p className="text-xs text-text-muted mt-2">
-                            Doctor checks: private key, RPC connectivity, wallet balance, and encryption round-trip.
-                            All 5 checks should pass before proceeding.
-                        </p>
+                    <StepCard step={2} title="Option B — Add to existing project">
+                        <CopyBlock code={`npm install silo-agent`} />
+                        <div className="mt-3">
+                            <CopyBlock lang="typescript" code={`import { AgentVault } from "silo-agent";
+
+const vault = new AgentVault({
+  privateKey: process.env.PRIVATE_KEY!,
+  evmRpc: "https://evmrpc-testnet.0g.ai",
+  indexerRpc: "https://indexer-storage-testnet-turbo.0g.ai",
+});
+await vault.init();
+
+// Store encrypted memory
+const { rootHash } = await vault.store("sensitive patient data");
+
+// Retrieve and decrypt
+const decrypted = await vault.retrieve(rootHash);
+
+// Commit attestation (Merkle proof of all actions)
+const { merkleRoot } = await vault.commitSession();`} />
+                        </div>
                     </StepCard>
 
-                    <StepCard step={3} title="Connect Your Agent">
+                    <StepCard step={3} title="Option C — MCP Server (Claude Desktop / Cursor)">
                         <p className="text-xs text-text-muted mb-3">
                             Add this to your Claude Desktop config (<code className="text-primary bg-primary/10 px-1 rounded">~/Library/Application Support/Claude/claude_desktop_config.json</code>) or Cursor MCP settings:
                         </p>
@@ -129,7 +187,7 @@ npm run doctor`} />
       "command": "npx",
       "args": ["silo-agent", "mcp"],
       "env": {
-        "PRIVATE_KEY": "your_0g_wallet_private_key_no_0x_prefix",
+        "PRIVATE_KEY": "your_64_char_hex_key",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
         "INDEXER_RPC": "https://indexer-storage-testnet-turbo.0g.ai"
       }
@@ -138,10 +196,6 @@ npm run doctor`} />
 }`} />
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
                             No absolute paths needed — <code className="text-primary bg-primary/10 px-1 rounded">npx</code> resolves the package from npm automatically.
-                            {' '}<code className="text-primary bg-primary/10 px-1 rounded">PRIVATE_KEY</code> is your 0G/EVM wallet private key (64-char hex, no 0x prefix).
-                            It's used to sign 0G Storage transactions and as the seed for AES-256 vault encryption.
-                            Generate one with MetaMask or <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>,
-                            then fund it at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
                     </StepCard>
                 </div>
@@ -218,6 +272,21 @@ cd 0g-agent-shield && npm start
 
 # Terminal 2: Dashboard
 cd 0g-agent-shield-ui && npm run dev`} />
+
+                    <div className="mt-6 pt-5 border-t border-border/50">
+                        <h4 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-pulse" />
+                            Using the Hosted Dashboard?
+                        </h4>
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            If you're viewing this on Vercel instead of localhost, the dashboard can't reach your local background server directly.
+                            You need to expose it using <code className="text-primary bg-primary/10 px-1 rounded">ngrok</code>:
+                        </p>
+                        <CopyBlock code={`ngrok http 3000`} />
+                        <p className="text-xs text-text-muted mt-3 leading-relaxed">
+                            Copy the generated `https://` ngrok URL, click on the <strong className="text-text-primary">Offline / URL</strong> indicator in the top right of this dashboard, paste the URL, and press Enter to connect.
+                        </p>
+                    </div>
                 </div>
             </div>
 
