@@ -22,6 +22,7 @@ cd 0g-agent-shield
 npm install
 cp .env.example .env
 # Edit .env: PRIVATE_KEY, EVM_RPC, INDEXER_RPC
+npm run build
 ```
 2. Validate environment:
 ```bash
@@ -173,6 +174,8 @@ Restart Claude Desktop. Your agent now has 8 vault tools: `vault_store`, `vault_
 
 DeFAI MCP tools are also available: `defai_plan`, `defai_approve`.
 
+If your MCP process pushes events through a public URL (for example ngrok), set the same `PUSH_EVENT_TOKEN` in both backend `.env` and MCP env to authorize `/api/push-event`.
+
 ### CLI Tools
 
 ```bash
@@ -215,7 +218,7 @@ Real-time monitoring: live event feed, D3 Merkle tree visualization, agent sandb
 ```
 ┌─────────────────────────────────────────────────┐
 │            MCP Server (mcp.ts)                  │
-│         8 tools for any AI client               │
+│         21 tools for any AI client              │
 └───────────────────┬─────────────────────────────┘
                     │
 ┌───────────────────▼─────────────────────────────┐

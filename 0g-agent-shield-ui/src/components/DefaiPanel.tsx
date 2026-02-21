@@ -42,6 +42,10 @@ interface PlanResponse {
   };
 }
 
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Unexpected error";
+}
+
 export function DefaiPanel({ apiUrl }: DefaiPanelProps) {
   const [intent, setIntent] = useState("Rebalance 500 USD from ETH to USDC with low risk.");
   const [tokenIn, setTokenIn] = useState("ETH");
@@ -91,8 +95,8 @@ export function DefaiPanel({ apiUrl }: DefaiPanelProps) {
         throw new Error(details);
       }
       setPlanData(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(errorMessage(err));
       setPlanData(null);
     } finally {
       setLoading(false);
@@ -120,8 +124,8 @@ export function DefaiPanel({ apiUrl }: DefaiPanelProps) {
           ? `Approved. ${data.nextAction ?? "Ready for wallet signature."}`
           : "Rejected. Execution was halted."
       );
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(errorMessage(err));
     } finally {
       setLoading(false);
     }

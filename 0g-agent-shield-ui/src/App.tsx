@@ -21,6 +21,7 @@ export interface VaultEvent {
   type: string;
   timestamp: number;
   source: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
 }
 

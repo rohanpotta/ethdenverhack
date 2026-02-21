@@ -60,10 +60,16 @@ console.debug = writeStderr;
 
 // --- Dashboard bridge (fire-and-forget) ---
 const DASHBOARD_API = process.env.DASHBOARD_API || 'http://localhost:3000';
+const PUSH_EVENT_TOKEN = process.env.PUSH_EVENT_TOKEN;
 function pushToDashboard(type: string, data: Record<string, any>) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (PUSH_EVENT_TOKEN) {
+    headers['x-silo-push-token'] = PUSH_EVENT_TOKEN;
+  }
+
   fetch(`${DASHBOARD_API}/api/push-event`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ type, data }),
   }).catch((err) => {
     if (process.env.DEBUG_DASHBOARD === "true") {

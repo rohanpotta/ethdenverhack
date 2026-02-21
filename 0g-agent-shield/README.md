@@ -201,7 +201,7 @@ console.log(proof.merkleRoot); // public commitment
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   MCP Server (mcp.ts)                  │
-│              8 tools for any AI client                 │
+│              21 tools for any AI client                │
 │        pushes events to dashboard via REST             │
 └────────────────────┬───────────────────────────────────┘
                      │
@@ -285,7 +285,7 @@ silo/
 │   │   │   ├── storage.ts        # 0G Storage SDK wrapper + ABI fix
 │   │   │   ├── attestation.ts    # Merkle-based execution proofs
 │   │   │   └── vault.ts          # Unified public API (AgentVault)
-│   │   ├── mcp.ts                # MCP server (8 tools)
+│   │   ├── mcp.ts                # MCP server (21 tools)
 │   │   ├── server.ts             # Express API + WebSocket server
 │   │   ├── verify.ts             # CLI: verify stored data
 │   │   ├── doctor.ts             # CLI: validate environment

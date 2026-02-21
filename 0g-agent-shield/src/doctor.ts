@@ -61,12 +61,23 @@ const checks: Check[] = [
   {
     name: "Indexer RPC reachable",
     fn: async () => {
-      // Simple fetch to check the indexer is up
       const url = process.env.INDEXER_RPC!;
-      // The indexer doesn't have a simple health endpoint,
-      // so we just verify the URL is set and looks valid
       if (!url.startsWith("http")) throw new Error("Invalid URL");
-      return url;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          signal: controller.signal,
+        });
+        return `${url} (HTTP ${response.status})`;
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown indexer error";
+        throw new Error(message);
+      } finally {
+        clearTimeout(timeout);
+      }
     },
   },
   {

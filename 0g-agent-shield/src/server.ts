@@ -33,13 +33,19 @@ interface VaultEvent {
     type: string;
     timestamp: number;
     source: 'api' | 'mcp' | 'heartbeat' | 'autonomy';
-    data: Record<string, any>;
+    data: Record<string, unknown>;
 }
 const eventLog: VaultEvent[] = [];
 let eventCounter = 0;
 const planStore = new Map<string, StructuredPlan>();
+const pushEventToken = process.env.PUSH_EVENT_TOKEN?.trim();
 
-function pushEvent(type: VaultEvent['type'], source: VaultEvent['source'], data: Record<string, any>) {
+function isLocalRequest(ip?: string): boolean {
+    if (!ip) return false;
+    return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+}
+
+function pushEvent(type: VaultEvent['type'], source: VaultEvent['source'], data: Record<string, unknown>) {
     const event: VaultEvent = {
         id: ++eventCounter,
         type,
@@ -138,6 +144,19 @@ app.get('/api/events', (_req, res) => {
 
 // Allow MCP server (separate process) to push events into the WebSocket feed
 app.post('/api/push-event', (req, res) => {
+    const suppliedToken = req.header('x-silo-push-token');
+    const remoteIp = req.ip ?? req.socket.remoteAddress;
+    const hasValidToken = Boolean(pushEventToken) && suppliedToken === pushEventToken;
+    const allowedByLocal = !pushEventToken && isLocalRequest(remoteIp);
+
+    if (!hasValidToken && !allowedByLocal) {
+        return res.status(401).json({
+            error: pushEventToken
+                ? 'Unauthorized: invalid x-silo-push-token'
+                : 'Unauthorized: local requests only unless PUSH_EVENT_TOKEN is configured',
+        });
+    }
+
     const { type, data } = req.body;
     if (!type || !data) {
         return res.status(400).json({ error: 'Missing type or data' });
@@ -280,7 +299,7 @@ app.post('/api/store', async (req, res) => {
         if (!data) {
             return res.status(400).json({ error: 'Missing data field' });
         }
-        console.log(`[API] Received request to store: ${data.substring(0, 50)}...`);
+        console.log('[API] Received request to store payload');
         const result = await vault.store(data, label);
 
         pushEvent('store', 'api', {
