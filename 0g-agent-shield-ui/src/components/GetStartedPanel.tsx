@@ -85,6 +85,54 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                 </ul>
             </div>
 
+            {/* Architecture Concepts */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="label-caps">Core Architecture Concepts</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div className="glass-panel rounded-lg p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-accent-store" />
+                            <h4 className="text-sm font-semibold text-text-primary">Why Localhost?</h4>
+                        </div>
+                        <p className="text-xs text-text-muted leading-relaxed">
+                            SILO is a developer tool. The "backend" running on <code>localhost</code> is actually your local <strong>Agent Node</strong>. Running it locally means your Claude Desktop or Cursor agent communicates directly with it, without sending your private key or raw data to a centralized server. The Vercel dashboard is simply a universal headless viewer that connects to your local node via ngrok.
+                        </p>
+                    </div>
+
+                    <div className="glass-panel rounded-lg p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-accent-retrieve" />
+                            <h4 className="text-sm font-semibold text-text-primary">Where's the Private Key from?</h4>
+                        </div>
+                        <p className="text-xs text-text-muted leading-relaxed">
+                            It's a standard EVM wallet (like MetaMask). SILO uses it to sign transactions uploading data to 0G Storage, and also uses it to derive a secure AES-256 key. Your agent's memory is encrypted entirely client-side <em>before</em> it ever touches the decentralized storage network.
+                        </p>
+                    </div>
+
+                    <div className="glass-panel rounded-lg p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-accent-commit" />
+                            <h4 className="text-sm font-semibold text-text-primary">Session vs. Storage</h4>
+                        </div>
+                        <p className="text-xs text-text-muted leading-relaxed">
+                            When you stop your local backend (Ctrl+C), the active "session" ends and local memory is cleared. However, any data you <code>store()</code>'d is permanently saved on the 0G Storage testnet as an encrypted blob. If you didn't commit the session first, you just lose the Merkle proof connecting the events.
+                        </p>
+                    </div>
+
+                    <div className="glass-panel rounded-lg p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            <h4 className="text-sm font-semibold text-text-primary">Multi-Agent Privacy</h4>
+                        </div>
+                        <p className="text-xs text-text-muted leading-relaxed">
+                            Agents securely collaborate by sharing a specific <code>rootHash</code> and decryption key via the <code>vault_share</code> tool. Because everything is encrypted before upload, no unauthorized party can read the shared memory—even if they find it on the public 0G network.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {/* Universal 4-Step Setup */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
