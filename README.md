@@ -148,6 +148,35 @@ npm run doctor    # Checks: key, RPC, balance, encryption
 npm run demo      # Store → Retrieve → Commit attestation
 ```
 
+## Common Failures (Fast Fixes)
+
+- `EADDRINUSE: address already in use :::3000`
+  - Cause: another process already uses port `3000`.
+  - Fix:
+    ```bash
+    lsof -i :3000
+    kill -9 <PID>
+    npm start
+    ```
+- `ngrok ERR_NGROK_334` endpoint already online
+  - Cause: previous tunnel is still active.
+  - Fix:
+    ```bash
+    pkill -f ngrok
+    ngrok http 3000
+    ```
+- `MCP silo: ... is not valid JSON`
+  - Cause: non-protocol logs leaked to MCP stdout.
+  - Fix:
+    - Upgrade to latest `silo-agent`.
+    - Keep MCP as `npx silo-agent mcp` (do not wrap in extra shell logging).
+    - Restart Claude Desktop after config updates.
+- `0 balance — get testnet tokens from https://faucet.0g.ai`
+  - Cause: wallet is unfunded.
+  - Fix:
+    - Fund the exact address in your MCP/backend `PRIVATE_KEY` via faucet.
+    - Re-run `npm run doctor`.
+
 ## Connect to Claude Desktop / Cursor
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:

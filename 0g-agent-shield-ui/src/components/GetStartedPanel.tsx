@@ -157,6 +157,9 @@ cd my-agent`} />
                             Need a wallet? Export from MetaMask or run <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>
                             and fund it at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
+                        <p className="text-[11px] text-accent-store mt-2">
+                            Expected success output: project folder created with <code>package.json</code>, <code>.env</code>, and <code>demo-context.md</code>.
+                        </p>
                     </StepCard>
 
                     {/* STEP 2: MCP */}
@@ -181,6 +184,9 @@ cd my-agent`} />
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
                             This gives your AI 21 tools out-of-the-box (like <code className="text-text-primary">vault_store</code>, <code className="text-text-primary">defai_plan</code>, and <code className="text-text-primary">memory_write</code>).
                         </p>
+                        <p className="text-[11px] text-accent-store mt-2">
+                            Expected success output: Claude/Cursor shows SILO MCP tools and no JSON parse errors.
+                        </p>
                     </StepCard>
 
                     {/* STEP 3: V2 CONTEXT */}
@@ -190,6 +196,9 @@ cd my-agent`} />
                         </p>
                         <p className="text-xs text-text-muted mb-3 leading-relaxed">
                             Copy everything inside the <code className="text-primary bg-primary/10 px-1 rounded">demo-context.md</code> file generated in your project root, and paste it to your Claude Desktop or Cursor chat <i>before</i> starting your work!
+                        </p>
+                        <p className="text-[11px] text-accent-store mt-2">
+                            Expected success output: model acknowledges SILO v2 rules and avoids autonomous tools unless explicitly asked.
                         </p>
                     </StepCard>
 
@@ -216,6 +225,9 @@ npm start`} />
                                 </p>
                             </div>
                         </div>
+                        <p className="text-[11px] text-accent-store mt-3">
+                            Expected success output: terminal shows server listening on <code>:3000</code> and ngrok prints a public <code>https://...</code> URL.
+                        </p>
                     </StepCard>
 
                     {/* STEP 5: DASHBOARD */}
@@ -229,8 +241,21 @@ npm start`} />
                             <li>Paste the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL you copied in Step 4.</li>
                             <li>Press <strong className="text-text-primary">Enter</strong> to connect. The dashboard will instantly sync with your local node.</li>
                         </ul>
+                        <p className="text-[11px] text-accent-store mt-2">
+                            Expected success output: connection indicator turns online and new vault events appear live.
+                        </p>
                     </StepCard>
                 </div>
+            </div>
+
+            <div className="glass-panel rounded-lg p-5 border border-primary/20">
+                <div className="label-caps mb-3">Common Failures (Fast Fixes)</div>
+                <ul className="text-xs text-text-muted space-y-2 leading-relaxed">
+                    <li><code>EADDRINUSE :::3000</code> {'->'} run <code>lsof -i :3000</code>, then <code>kill -9 &lt;PID&gt;</code>, then restart.</li>
+                    <li><code>ERR_NGROK_334</code> {'->'} previous tunnel still online. Run <code>pkill -f ngrok</code> and start ngrok again.</li>
+                    <li><code>MCP ... is not valid JSON</code> {'->'} keep MCP as <code>npx silo-agent mcp</code>, avoid extra stdout logs, restart client.</li>
+                    <li><code>0 balance</code> in doctor {'->'} fund the same wallet from <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a> and re-run doctor.</li>
+                </ul>
             </div>
 
             {/* Try it CTA */}
