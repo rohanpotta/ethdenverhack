@@ -44,7 +44,7 @@ export function HexCascade({ ciphertext, rootHash, onComplete }: HexCascadeProps
             ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+            ctx.font = `${fontSize}px "Inter", system-ui, sans-serif`;
 
             for (let i = 0; i < cols; i++) {
                 const char = hexChars[Math.floor(Math.random() * hexChars.length)];
@@ -76,7 +76,7 @@ export function HexCascade({ ciphertext, rootHash, onComplete }: HexCascadeProps
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                ctx.font = `14px "JetBrains Mono", monospace`;
+                ctx.font = `14px "Inter", system-ui, sans-serif`;
                 ctx.fillStyle = '#0066FF';
                 ctx.textAlign = 'center';
                 ctx.fillText(rootHash, canvas.width / 2, canvas.height / 2);
