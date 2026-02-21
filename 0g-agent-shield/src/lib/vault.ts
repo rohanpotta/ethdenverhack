@@ -38,6 +38,7 @@ export interface CommitResult {
   eventCount: number;
   traceRootHash: string; // 0G root hash of the encrypted full trace
   traceTxHash: string;
+  durationMs: number;
 }
 
 export class AgentVault {
@@ -142,6 +143,7 @@ export class AgentVault {
   async commitSession(): Promise<CommitResult> {
     this.ensureInit();
 
+    const startMs = Date.now();
     const attestation = this.session.finalize();
 
     // Encrypt the full trace — it contains hashes of inputs/outputs,
@@ -160,6 +162,7 @@ export class AgentVault {
       eventCount: attestation.eventCount,
       traceRootHash: upload.rootHash,
       traceTxHash: upload.txHash,
+      durationMs: Date.now() - startMs,
     };
   }
 

@@ -2,13 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HexCascade } from './effects/HexCascade';
 
-interface VaultEvent {
-    id: number;
-    type: 'store' | 'retrieve' | 'session_commit';
-    timestamp: number;
-    source: 'api' | 'mcp';
-    data: Record<string, any>;
-}
+import type { VaultEvent } from '../App';
 
 type Tab = 'store' | 'retrieve';
 

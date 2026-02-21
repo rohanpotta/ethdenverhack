@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-interface VaultEvent {
-    id: number;
-    type: 'store' | 'retrieve' | 'session_commit';
-    timestamp: number;
-    source: 'api' | 'mcp';
-    data: Record<string, any>;
-}
+import type { VaultEvent } from '../App';
 
 export function AgentsPanel({ events }: { events: VaultEvent[] }) {
     const [transferActive, setTransferActive] = useState(false);

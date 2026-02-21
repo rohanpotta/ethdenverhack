@@ -146,12 +146,12 @@ app.post('/api/push-event', (req, res) => {
 
 app.post('/api/store', async (req, res) => {
     try {
-        const { data } = req.body;
+        const { data, label } = req.body;
         if (!data) {
             return res.status(400).json({ error: 'Missing data field' });
         }
         console.log(`[API] Received request to store: ${data.substring(0, 50)}...`);
-        const result = await vault.store(data);
+        const result = await vault.store(data, label);
 
         pushEvent('store', 'api', {
             rootHash: result.rootHash,
@@ -159,6 +159,7 @@ app.post('/api/store', async (req, res) => {
             contentHash: result.contentHash,
             size: result.size,
             sessionEvent: result.sessionEvent,
+            label,
         });
 
         res.json(result);
@@ -200,6 +201,7 @@ app.post('/api/attest', async (req, res) => {
             eventCount: result.eventCount,
             traceRootHash: result.traceRootHash,
             traceTxHash: result.traceTxHash,
+            durationMs: result.durationMs,
         });
 
         res.json(result);

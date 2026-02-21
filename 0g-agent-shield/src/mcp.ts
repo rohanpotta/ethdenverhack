@@ -50,7 +50,11 @@ function pushToDashboard(type: string, data: Record<string, any>) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, data }),
-  }).catch(() => { }); // silent — dashboard may not be running
+  }).catch((err) => {
+    if (process.env.DEBUG_DASHBOARD === "true") {
+      console.error(`[MCP] Failed to push event to dashboard (${DASHBOARD_API}):`, err.message);
+    }
+  }); // silent unless debug is on
 }
 
 // --- Validation ---
@@ -534,9 +538,9 @@ server.tool(
             `⚙️ Autonomy level set to: ${level}`,
             ``,
             level === "off" ? "   Engine stopped. No autonomous actions will occur." :
-            level === "monitor" ? "   Monitoring mode. Issues will be logged but not acted on." :
-            level === "suggest" ? "   Suggest mode. Fixes will be recommended but not applied." :
-            "   🚀 FULLY AUTONOMOUS. Heartbeat active. Fixes will be applied automatically.",
+              level === "monitor" ? "   Monitoring mode. Issues will be logged but not acted on." :
+                level === "suggest" ? "   Suggest mode. Fixes will be recommended but not applied." :
+                  "   🚀 FULLY AUTONOMOUS. Heartbeat active. Fixes will be applied automatically.",
             ``,
             level === "autonomous" ? "   The heartbeat daemon is now running periodic health checks,\n   auto-committing sessions, and syncing shared memory." : "",
           ].join("\n"),

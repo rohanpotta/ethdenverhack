@@ -10,13 +10,7 @@ interface MerkleNode {
     children?: MerkleNode[];
 }
 
-interface VaultEvent {
-    id: number;
-    type: 'store' | 'retrieve' | 'session_commit';
-    timestamp: number;
-    source: 'api' | 'mcp';
-    data: Record<string, any>;
-}
+import type { VaultEvent } from '../App';
 
 const shortHash = (h: string) => h ? h.slice(0, 8) + '...' + h.slice(-4) : '-';
 

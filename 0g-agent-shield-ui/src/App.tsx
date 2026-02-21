@@ -9,13 +9,15 @@ import { MerkleTree } from './components/MerkleTree';
 import { SdkDiffPanel } from './components/SdkDiffPanel';
 import { GetStartedPanel } from './components/GetStartedPanel';
 import { CommitCeremony } from './components/CommitCeremony';
+import { AutonomyDashboard } from './components/AutonomyDashboard';
+import { SharedMemoryPanel } from './components/SharedMemoryPanel';
 import { io, Socket } from 'socket.io-client';
 
-type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk' | 'guide';
+type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk' | 'guide' | 'autonomy' | 'memory';
 
-interface VaultEvent {
+export interface VaultEvent {
   id: number;
-  type: 'store' | 'retrieve' | 'session_commit';
+  type: 'store' | 'retrieve' | 'session_commit' | 'agent_spawned' | 'agent_message' | 'autonomy_level_changed' | 'memory_write' | 'shared_memory' | 'memory_fork' | 'memory_head_updated';
   timestamp: number;
   source: 'api' | 'mcp';
   data: Record<string, any>;
@@ -26,8 +28,10 @@ const DEFAULT_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const NAV_ITEMS: { id: View; label: string }[] = [
   { id: 'guide', label: 'GUIDE' },
   { id: 'vault', label: 'VAULT' },
-  { id: 'merkle', label: 'MERKLE' },
+  { id: 'memory', label: 'MEMORY' },
   { id: 'agents', label: 'AGENTS' },
+  { id: 'autonomy', label: 'AUTONOMY' },
+  { id: 'merkle', label: 'MERKLE' },
   { id: 'log', label: 'LOG' },
   { id: 'sdk', label: 'SDK FIX' },
 ];
@@ -350,6 +354,16 @@ function App() {
               {activeView === 'agents' && (
                 <motion.div key="agents" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
                   <AgentsPanel events={events} />
+                </motion.div>
+              )}
+              {activeView === 'autonomy' && (
+                <motion.div key="autonomy" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
+                  <AutonomyDashboard events={events} />
+                </motion.div>
+              )}
+              {activeView === 'memory' && (
+                <motion.div key="memory" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="h-full">
+                  <SharedMemoryPanel events={events} />
                 </motion.div>
               )}
               {activeView === 'log' && (
