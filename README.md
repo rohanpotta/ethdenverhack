@@ -4,6 +4,15 @@
 
 AI agents handle sensitive data — medical records, financial info, personal preferences — and store it in plaintext. SILO fixes this: every piece of agent memory is encrypted with AES-256-GCM, stored on 0G's decentralized network, and attested in a Merkle tree that proves exactly what the agent did — without revealing what it stored.
 
+## Why This Helps 0G Builders
+
+SILO targets the highest-friction points teams hit when building agent apps on 0G:
+
+- Setup friction: one-command scaffold (`create-silo-app`) and a doctor command to validate env/network/key health.
+- Integration friction: MCP tools that make encrypted memory and DeFAI planning callable from Claude/Cursor.
+- Debugging friction: live dashboard + event stream + attestation trail for verifiable behavior.
+- Safety friction: explicit DeFAI approve/reject gate, guardrails, and auditable artifacts on 0G.
+
 ## What's Inside
 
 | Directory | What it does |
@@ -11,6 +20,22 @@ AI agents handle sensitive data — medical records, financial info, personal pr
 | **`0g-agent-shield/`** | Core library + MCP server (21 tools total, including DeFAI tools) + CLI tools (doctor, verify, demo) |
 | **`0g-agent-shield-ui/`** | Real-time dashboard — Merkle tree visualization, event log, onboarding guide |
 | **`create-silo-app/`** | Scaffold CLI — `npx create-silo-app my-agent` generates a working project |
+
+## Judge Fast Path (<30 Minutes)
+
+If you are evaluating this for the 0G tooling/education and DeFAI tracks, this is the shortest high-signal path:
+
+1. Run tooling flow:
+   - `npx create-silo-app my-agent`
+   - `cd my-agent && npm run build && npm run doctor && npm run demo`
+2. Run DeFAI flow:
+   - `npm run defai:demo`
+3. Validate MCP/manual usage:
+   - use `docs/mcp-demo-prompt.md`
+   - use `docs/defai-demo-prompt.md`
+4. Confirm artifacts:
+   - check root hashes / tx hashes in terminal output
+   - check live events in dashboard
 
 ## Judge Path (3 Minutes)
 
@@ -35,6 +60,13 @@ Expected: `✅ PRIVATE_KEY set`, `✅ EVM RPC reachable`, `✅ Wallet balance`, 
 npm run demo
 ```
 Expected: `Stored!`, `Decrypted`, `Session attestation committed to 0G`, plus a `Merkle Root` and `Trace Hash`.
+
+## Working Examples (Runnable)
+
+- Tooling path (vault + attestation): `npm run demo`
+- DeFAI path (plan + approval flow): `npm run defai:demo`
+- MCP manual demo prompt: `docs/mcp-demo-prompt.md`
+- DeFAI end-to-end prompt (approve + reject): `docs/defai-demo-prompt.md`
 
 ## Friction Metric (Measured)
 
@@ -170,6 +202,27 @@ npm run doctor    # Checks: key, RPC, balance, encryption
 npm run demo      # Store → Retrieve → Commit attestation
 ```
 
+### Hosted Dashboard (Vercel) + Local Backend
+
+If you want the hosted UI while running your own local agent node:
+
+1. Start backend locally (`npm start`) on `:3000`.
+2. Start tunnel: `ngrok http 3000`.
+3. Open hosted SILO dashboard.
+4. Use the top-right `Offline / URL` control and paste your ngrok URL.
+5. Dashboard should turn online and stream your local events.
+
+## Open Source and Reuse
+
+- License: MIT
+- Published package: `silo-agent`
+- Scaffold package: `create-silo-app`
+- Architecture is modular so teams can adopt only what they need:
+  - library API (`AgentVault`)
+  - MCP server
+  - API server + dashboard
+  - DeFAI planning layer
+
 ## Common Failures (Fast Fixes)
 
 - `EADDRINUSE: address already in use :::3000`
@@ -264,6 +317,38 @@ cd 0g-agent-shield-ui && npm run dev
 
 Real-time monitoring: live event feed, D3 Merkle tree visualization, agent sandbox, and a step-by-step onboarding guide.
 
+## Track Requirement Mapping
+
+### 0G Dev Tooling / Education
+
+| Requirement | Evidence in SILO |
+|---|---|
+| Deliver tooling or education | Tooling: `silo-agent`, `create-silo-app`, dashboard. Education: onboarding guide + runnable prompts/docs |
+| Open source with clear setup | Public repo + `Quick Start` + `Common Failures` sections |
+| At least one working example | `npm run demo`, `docs/mcp-demo-prompt.md` |
+| Reduces real friction | Doctor checks, scaffold CLI, MCP integration, dashboard observability |
+
+Immediate onboarding proof:
+- new developer can bootstrap via `create-silo-app`
+- verify env with `doctor`
+- execute working vault example (`demo`)
+- use copy-paste MCP prompts without writing custom integration code
+
+### DeFAI
+
+| Requirement | Evidence in SILO |
+|---|---|
+| Structured AI decisioning | `defai_plan` returns structured plan, constraints, risk report, preview |
+| Guardrails and safety | allowlist + slippage + timeout + notional checks + block on violations |
+| User remains in control | explicit `defai_approve(true/false)` gate before any execution |
+| End-to-end scenario | `docs/defai-demo-prompt.md` covers plan -> approve/reject -> artifact proof |
+| 0G value-add | plan/approval artifacts encrypted and attested on 0G |
+| Scope honesty | execution mode is `dry_run_only` (no auto transaction broadcast in this MVP) |
+
+End-to-end scenario requirement:
+- provided in `docs/defai-demo-prompt.md`
+- includes both approve and reject path (user control evidence)
+
 ## Architecture
 
 ```
@@ -290,8 +375,20 @@ Real-time monitoring: live event feed, D3 Merkle tree visualization, agent sandb
 
 ```bash
 cd 0g-agent-shield
-npm test    # 35 tests: crypto (14) + attestation (21)
+npm test
 ```
+
+Current suite: 59 passing tests across crypto, attestation, DeFAI planning, memory coordination, and memory index behavior.
+
+## Submission Notes
+
+- Primary track fit: 0G Dev Tooling / Education
+- Secondary track fit: DeFAI (planning + safety + user approval + dry-run evidence)
+- Designed to be reusable by other teams as:
+  - library
+  - CLI scaffold
+  - MCP tool surface
+  - dashboard onboarding/debug layer
 
 ## License
 
