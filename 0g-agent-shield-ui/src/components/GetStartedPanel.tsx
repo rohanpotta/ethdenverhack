@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { BookOpen, Copy, Check, Terminal, Shield, Key, Zap, Users, ArrowRight } from 'lucide-react';
 
 function CopyBlock({ code, lang: _lang = 'bash' }: { code: string; lang?: string }) {
     const [copied, setCopied] = useState(false);
@@ -14,9 +13,9 @@ function CopyBlock({ code, lang: _lang = 'bash' }: { code: string; lang?: string
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                 }}
-                className="absolute top-2 right-2 p-1.5 rounded bg-base-elevated/80 border border-border text-text-muted hover:text-primary hover:border-primary/30 transition-all opacity-0 group-hover:opacity-100"
+                className="absolute top-2 right-2 p-1.5 rounded bg-base-elevated/80 border border-border text-text-muted hover:text-primary hover:border-primary/30 transition-all opacity-0 group-hover:opacity-100 text-[10px] font-mono"
             >
-                {copied ? <Check className="w-3 h-3 text-accent-commit" /> : <Copy className="w-3 h-3" />}
+                {copied ? 'Copied' : 'Copy'}
             </button>
         </div>
     );
@@ -41,32 +40,26 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
         <div className="max-w-4xl mx-auto space-y-8 pb-12">
             {/* Hero */}
             <div>
-                <h2 className="font-sans text-lg font-semibold tracking-wide flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-primary" />
+                <h2 className="font-sans text-lg font-semibold tracking-wide">
                     Get Started with SILO
                 </h2>
                 <p className="text-sm text-text-muted mt-2 max-w-2xl leading-relaxed">
                     SILO gives AI agents encrypted, decentralized memory on 0G with cryptographic proof of every action.
                     Install the MCP server, connect your agent, and every <code className="text-primary bg-primary/10 px-1 rounded text-xs">vault_store</code> call
-                    is encrypted with AES-256-GCM and uploaded to 0G Storage — with a Merkle attestation trail.
+                    is encrypted with AES-256-GCM and uploaded to 0G Storage with a Merkle attestation trail.
                 </p>
             </div>
 
             {/* What you get */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                    { icon: Shield, label: 'Encrypted Storage', desc: 'AES-256-GCM + 0G decentralized storage' },
-                    { icon: Key, label: 'Merkle Attestation', desc: 'Verifiable proof of agent behavior' },
-                    { icon: Users, label: 'Multi-Agent Sharing', desc: 'Cross-agent encrypted memory transfer' },
-                ].map(({ icon: Icon, label, desc }) => (
-                    <div key={label} className="glass-panel rounded p-3 flex items-start gap-3">
-                        <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <Icon className="w-4 h-4 text-primary" />
-                        </div>
-                        <div>
-                            <div className="text-xs font-semibold text-text-primary">{label}</div>
-                            <div className="text-[11px] text-text-muted mt-0.5">{desc}</div>
-                        </div>
+                    { label: 'Encrypted Storage', desc: 'AES-256-GCM + 0G decentralized storage' },
+                    { label: 'Merkle Attestation', desc: 'Verifiable proof of agent behavior' },
+                    { label: 'Multi-Agent Sharing', desc: 'Cross-agent encrypted memory transfer' },
+                ].map(({ label, desc }) => (
+                    <div key={label} className="glass-panel rounded p-4">
+                        <div className="text-xs font-semibold text-text-primary">{label}</div>
+                        <div className="text-[11px] text-text-muted mt-1">{desc}</div>
                     </div>
                 ))}
             </div>
@@ -74,7 +67,6 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
             {/* Prerequisites */}
             <div className="glass-panel rounded-lg p-5 border border-accent-gold/15">
                 <div className="flex items-center gap-2 mb-3">
-                    <Zap className="w-4 h-4 text-accent-gold" />
                     <span className="label-caps text-accent-gold">Prerequisites</span>
                 </div>
                 <ul className="text-sm text-text-muted space-y-1.5">
@@ -84,7 +76,7 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                     </li>
                     <li className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-accent-gold/50" />
-                        0G testnet tokens — get from <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>
+                        0G testnet tokens, get from <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>
                     </li>
                     <li className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-accent-gold/50" />
@@ -96,7 +88,6 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
             {/* Step-by-step */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <Terminal className="w-4 h-4 text-primary" />
                     <span className="label-caps">Setup in 3 Steps</span>
                 </div>
 
@@ -154,7 +145,6 @@ npm run doctor`} />
             {/* MCP Tools Reference */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <Terminal className="w-4 h-4 text-primary" />
                     <span className="label-caps">8 MCP Tools Available</span>
                 </div>
                 <div className="glass-panel rounded-lg overflow-hidden">
@@ -189,14 +179,13 @@ npm run doctor`} />
             {/* Multi-agent sharing */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <Users className="w-4 h-4 text-primary" />
                     <span className="label-caps">Multi-Agent Sharing</span>
                 </div>
                 <div className="glass-panel rounded-lg p-5">
                     <p className="text-sm text-text-muted mb-4 leading-relaxed">
                         Agents sharing the same <code className="text-primary bg-primary/10 px-1 rounded text-xs">VAULT_SECRET</code> can
                         pass encrypted memories to each other. Agent A stores data and generates a share descriptor.
-                        Agent B imports it using the root hash — and both actions are attested in their respective Merkle trees.
+                        Agent B imports it using the root hash and both actions are attested in their respective Merkle trees.
                     </p>
                     <div className="glass-panel rounded p-4 font-mono text-xs text-text-muted space-y-1">
                         <div><span className="text-accent-store">Agent A:</span> vault_share("patient vitals: HR 72, BP 120/80")</div>
@@ -212,7 +201,6 @@ npm run doctor`} />
             {/* Dashboard */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <Zap className="w-4 h-4 text-accent-commit" />
                     <span className="label-caps">Start the Dashboard</span>
                 </div>
                 <div className="glass-panel rounded-lg p-5">
@@ -236,10 +224,9 @@ cd 0g-agent-shield-ui && npm run dev`} />
                 </p>
                 <button
                     onClick={() => onNavigate('vault')}
-                    className="inline-flex items-center gap-2 px-5 py-2 bg-primary/15 border border-primary/30 text-primary font-mono text-xs uppercase tracking-widest rounded hover:bg-primary/25 transition-all"
+                    className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 border border-primary/30 text-primary font-mono text-xs uppercase tracking-widest rounded hover:bg-primary/20 transition-all"
                 >
                     Open Vault
-                    <ArrowRight className="w-3 h-3" />
                 </button>
             </div>
         </div>

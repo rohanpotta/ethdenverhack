@@ -1,0 +1,52 @@
+---
+description: Automatically commit and push every change with detailed git messages
+alwaysApply: true
+---
+
+# Auto Commit & Push
+
+After every code change you make, **immediately** commit and push it. Never wait for the user to ask.
+
+## Workflow
+
+1. Stage all changed files with `git add -A`
+2. Write a **detailed** commit message (see format below)
+3. Commit, then push to the current remote branch
+
+## Commit Message Format
+
+```
+<type>(<scope>): <short summary>
+
+What changed:
+- bullet list of every file touched and what was modified
+
+Why:
+- the motivation / user request behind the change
+
+Risk notes:
+- anything that could break, or "None" if safe
+```
+
+### Type values
+
+| Type       | Use when                              |
+|------------|---------------------------------------|
+| `feat`     | new feature or capability             |
+| `fix`      | bug fix                               |
+| `refactor` | restructuring without behavior change |
+| `style`    | formatting, UI, CSS-only changes      |
+| `chore`    | deps, config, tooling                 |
+| `docs`     | documentation only                    |
+| `test`     | adding or updating tests              |
+
+### Scope
+
+Use the top-level directory or component name, e.g. `ui`, `api`, `config`, `cold-open`.
+
+## Rules
+
+- One commit per logical change — don't batch unrelated work
+- Never use generic messages like "update files" or "fix stuff"
+- If a push fails (e.g. no remote, auth error), report the error to the user and still commit locally
+- Never force-push unless explicitly asked

@@ -1,12 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/**
- * Two-phase cold open splash:
- * Phase 1: Particle assembly — dots drift inward and coalesce into "SILO" letterforms
- * Phase 2: Dither bloom — the logo blooms with teal glow, then threshold-dissolves
- */
-
 export function ColdOpen({ onComplete }: { onComplete: () => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [showSplash, setShowSplash] = useState(true);
@@ -18,13 +12,11 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) return;
 
-        // Use a smaller offscreen canvas for text sampling to avoid performance issues
         const W = window.innerWidth;
         const H = window.innerHeight;
         canvas.width = W;
         canvas.height = H;
 
-        // ── Sample text on a small offscreen canvas ──
         const sampleW = 1000;
         const sampleH = 500;
         const offscreen = document.createElement('canvas');
@@ -32,7 +24,7 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
         offscreen.height = sampleH;
         const offCtx = offscreen.getContext('2d')!;
 
-        offCtx.font = 'bold 80px "Space Grotesk", system-ui, sans-serif';
+        offCtx.font = 'bold 80px "Inter", system-ui, sans-serif';
         offCtx.textAlign = 'center';
         offCtx.textBaseline = 'middle';
         offCtx.fillStyle = '#fff';
@@ -42,7 +34,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
         const textPixels: [number, number][] = [];
         const step = 3;
 
-        // Map offscreen coordinates to main canvas coordinates
         const offsetX = (W - sampleW) / 2;
         const offsetY = (H - sampleH) / 2 - 20;
 
@@ -55,7 +46,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
             }
         }
 
-        // ── Create particles ──
         const particleCount = Math.min(textPixels.length, 600);
         const particles = Array.from({ length: particleCount }, (_, i) => {
             const targetIdx = Math.floor(i * textPixels.length / particleCount);
@@ -74,7 +64,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
             };
         });
 
-        // ── Bayer 4x4 dither matrix ──
         const bayer = [
             [0, 8, 2, 10],
             [12, 4, 14, 6],
@@ -82,12 +71,11 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
             [15, 7, 13, 5],
         ];
 
-        // ── Timing (frame-based at ~60fps) ──
-        const DRIFT_FRAMES = 30;        // 0.5s free drift
-        const ASSEMBLE_FRAMES = 120;    // 2s assembly
-        const HOLD_FRAMES = 40;         // 0.67s hold the formed logo
-        const BLOOM_FRAMES = 50;        // 0.83s bloom compression
-        const DITHER_FRAMES = 50;       // 0.83s dither out
+        const DRIFT_FRAMES = 30;
+        const ASSEMBLE_FRAMES = 120;
+        const HOLD_FRAMES = 40;
+        const BLOOM_FRAMES = 50;
+        const DITHER_FRAMES = 50;
         const TOTAL = DRIFT_FRAMES + ASSEMBLE_FRAMES + HOLD_FRAMES + BLOOM_FRAMES + DITHER_FRAMES;
 
         let frame = 0;
@@ -104,7 +92,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
                 return;
             }
 
-            // Phase detection
             let phase: string;
             if (frame <= DRIFT_FRAMES) phase = 'drift';
             else if (frame <= DRIFT_FRAMES + ASSEMBLE_FRAMES) phase = 'assemble';
@@ -112,11 +99,9 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
             else if (frame <= DRIFT_FRAMES + ASSEMBLE_FRAMES + HOLD_FRAMES + BLOOM_FRAMES) phase = 'bloom';
             else phase = 'dither';
 
-            // ── Clear ──
-            ctx.fillStyle = phase === 'bloom' ? 'rgba(4, 4, 8, 0.25)' : 'rgba(4, 4, 8, 0.12)';
+            ctx.fillStyle = phase === 'bloom' ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.12)';
             ctx.fillRect(0, 0, W, H);
 
-            // ── Phase-specific particle behavior ──
             const assembleStart = DRIFT_FRAMES;
             const bloomStart = DRIFT_FRAMES + ASSEMBLE_FRAMES + HOLD_FRAMES;
             const ditherStart = bloomStart + BLOOM_FRAMES;
@@ -131,7 +116,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
                     p.x += (p.targetX - p.x) * (p.speed + ease * 0.06);
                     p.y += (p.targetY - p.y) * (p.speed + ease * 0.06);
                 } else if (phase === 'hold') {
-                    // gentle settle
                     p.x += (p.targetX - p.x) * 0.1;
                     p.y += (p.targetY - p.y) * 0.1;
                 } else if (phase === 'bloom') {
@@ -147,40 +131,37 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
                     if (t > threshold) continue;
                 }
 
-                const isViolet = phase !== 'drift';
+                const isBlue = phase !== 'drift';
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = isViolet
-                    ? `rgba(124, 58, 237, ${p.alpha})`
-                    : `rgba(${100 + Math.random() * 60}, ${40 + Math.random() * 40}, ${180 + Math.random() * 75}, ${p.alpha * 0.6})`;
+                ctx.fillStyle = isBlue
+                    ? `rgba(0, 102, 255, ${p.alpha})`
+                    : `rgba(${60 + Math.random() * 40}, ${80 + Math.random() * 60}, ${200 + Math.random() * 55}, ${p.alpha * 0.6})`;
                 ctx.fill();
             }
 
-            // ── Bloom glow ──
             if (phase === 'bloom') {
                 const t = (frame - bloomStart) / BLOOM_FRAMES;
                 const radius = t * Math.max(W, H) * 0.35;
                 const alpha = Math.sin(t * Math.PI) * 0.25;
                 const gradient = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, radius);
-                gradient.addColorStop(0, `rgba(124, 58, 237, ${alpha})`);
-                gradient.addColorStop(0.6, `rgba(167, 139, 250, ${alpha * 0.2})`);
-                gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
+                gradient.addColorStop(0, `rgba(0, 102, 255, ${alpha})`);
+                gradient.addColorStop(0.6, `rgba(96, 165, 250, ${alpha * 0.2})`);
+                gradient.addColorStop(1, 'rgba(0, 102, 255, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, W, H);
             }
 
-            // ── Subtitle ──
             if (phase === 'hold' || phase === 'assemble') {
                 const subT = Math.min(1, (frame - assembleStart - 60) / 30);
                 if (subT > 0) {
-                    ctx.font = '11px "Space Grotesk", system-ui, sans-serif';
+                    ctx.font = '11px "Inter", system-ui, sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillStyle = `rgba(82, 82, 122, ${subT * 0.7})`;
+                    ctx.fillStyle = `rgba(107, 114, 128, ${subT * 0.7})`;
                     ctx.fillText('ENCRYPTED AGENT MEMORY', W / 2, H / 2 + 90);
                 }
             }
 
-            // ── Sparse grain ──
             for (let n = 0; n < 40; n++) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.05})`;
                 ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
@@ -191,7 +172,6 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
 
         animId = requestAnimationFrame(animate);
 
-        // Safety timeout: force transition after 6s no matter what
         const safetyTimeout = setTimeout(() => {
             if (!done) {
                 done = true;
@@ -217,7 +197,7 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
             {showSplash && (
                 <motion.div
                     className="fixed inset-0 z-[100]"
-                    style={{ backgroundColor: '#040408' }}
+                    style={{ backgroundColor: '#000000' }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, ease: 'easeInOut' }}
                 >

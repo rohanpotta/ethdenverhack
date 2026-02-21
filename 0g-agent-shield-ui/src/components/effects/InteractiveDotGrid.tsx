@@ -24,8 +24,8 @@ function hexToRgb(hex: string) {
 export function InteractiveDotGrid({
   dotSize = 1.5,
   gap = 28,
-  baseColor = '#2a1f5e',
-  activeColor = '#7C3AED',
+  baseColor = '#1a1a1a',
+  activeColor = '#0066FF',
   proximity = 120,
   className = '',
 }: InteractiveDotGridProps) {

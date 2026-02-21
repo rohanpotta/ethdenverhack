@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ExternalLink } from 'lucide-react';
 
 interface CommitData {
     merkleRoot: string;
@@ -10,14 +9,6 @@ interface CommitData {
     traceTxHash: string;
 }
 
-/**
- * Session commit ceremony.
- * On session_commit event:
- * 1. Screen flashes white briefly (brightness filter)
- * 2. Particle burst reusing ColdOpen logic
- * 3. Verification card slides up with VERIFIED ✓
- * 4. StorageScan deeplink
- */
 export function CommitCeremony({
     commitData,
     onDismiss,
@@ -32,11 +23,9 @@ export function CommitCeremony({
     useEffect(() => {
         if (!commitData) return;
 
-        // Phase 1: Flash
         setFlashActive(true);
         setTimeout(() => setFlashActive(false), 80);
 
-        // Phase 2: Particle burst (reusing ColdOpen particle logic)
         const canvas = canvasRef.current;
         if (canvas) {
             const ctx = canvas.getContext('2d');
@@ -48,7 +37,6 @@ export function CommitCeremony({
                 const cx = W / 2;
                 const cy = H / 2;
 
-                // 40 particles, teal + white, gravity pull
                 const particles = Array.from({ length: 40 }, () => {
                     const angle = Math.random() * Math.PI * 2;
                     const speed = 2 + Math.random() * 6;
@@ -60,21 +48,21 @@ export function CommitCeremony({
                         size: 1 + Math.random() * 3,
                         life: 1,
                         decay: 0.015 + Math.random() * 0.01,
-                        color: Math.random() > 0.3 ? [0, 229, 195] : [255, 255, 255],
+                        color: Math.random() > 0.3 ? [0, 102, 255] : [255, 255, 255],
                     };
                 });
 
                 let frame = 0;
                 const burst = () => {
                     frame++;
-                    if (frame > 60) return; // 1 second
+                    if (frame > 60) return;
 
                     ctx.clearRect(0, 0, W, H);
 
                     for (const p of particles) {
                         p.x += p.vx;
                         p.y += p.vy;
-                        p.vy += 0.1; // gravity
+                        p.vy += 0.1;
                         p.vx *= 0.98;
                         p.vy *= 0.98;
                         p.life -= p.decay;
@@ -93,10 +81,8 @@ export function CommitCeremony({
             }
         }
 
-        // Phase 3: Show card after particle burst
         setTimeout(() => setShowCard(true), 500);
 
-        // Auto-dismiss after 6 seconds
         const dismissTimer = setTimeout(() => {
             setShowCard(false);
             setTimeout(onDismiss, 400);
@@ -113,7 +99,6 @@ export function CommitCeremony({
 
     return (
         <div className="fixed inset-0 z-50 pointer-events-none">
-            {/* Flash overlay */}
             <AnimatePresence>
                 {flashActive && (
                     <motion.div
@@ -126,13 +111,11 @@ export function CommitCeremony({
                 )}
             </AnimatePresence>
 
-            {/* Particle canvas */}
             <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full pointer-events-none"
             />
 
-            {/* Verification card */}
             <AnimatePresence>
                 {showCard && (
                     <motion.div
@@ -145,18 +128,15 @@ export function CommitCeremony({
                             ease: [0.16, 1, 0.3, 1],
                         }}
                     >
-                        <div className="glass-panel rounded border border-accent-commit/40 p-5 min-w-[380px] relative overflow-hidden"
-                            style={{ boxShadow: '0 0 40px rgba(34, 197, 94, 0.15)' }}
-                        >
-                            {/* Dotted border (0G style) */}
+                        <div className="glass-panel rounded border border-accent-commit/40 p-5 min-w-[380px] relative overflow-hidden">
                             <div className="absolute inset-0 border border-dashed border-accent-commit/20 rounded m-1 pointer-events-none" />
 
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-accent-commit/20 flex items-center justify-center">
-                                    <Check className="w-4 h-4 text-accent-commit" />
+                                <div className="w-8 h-8 rounded-full bg-accent-commit/20 flex items-center justify-center border border-accent-commit/30">
+                                    <span className="text-accent-commit font-mono text-[10px] font-bold">OK</span>
                                 </div>
                                 <div>
-                                    <div className="font-mono text-sm font-semibold text-accent-commit tracking-widest">VERIFIED ✓</div>
+                                    <div className="font-mono text-sm font-semibold text-accent-commit tracking-widest">VERIFIED</div>
                                     <div className="text-[10px] text-text-muted font-mono">Session attested on-chain</div>
                                 </div>
                             </div>
@@ -164,7 +144,7 @@ export function CommitCeremony({
                             <div className="space-y-2 text-xs font-mono">
                                 <div className="flex justify-between">
                                     <span className="label-caps">Merkle Root</span>
-                                    <span className="text-primary">{commitData.merkleRoot?.slice(0, 20)}…</span>
+                                    <span className="text-primary">{commitData.merkleRoot?.slice(0, 20)}...</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="label-caps">Events</span>
@@ -172,7 +152,7 @@ export function CommitCeremony({
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="label-caps">Trace Hash</span>
-                                    <span className="text-text-muted">{commitData.traceRootHash?.slice(0, 20)}…</span>
+                                    <span className="text-text-muted">{commitData.traceRootHash?.slice(0, 20)}...</span>
                                 </div>
                             </div>
 
@@ -182,16 +162,14 @@ export function CommitCeremony({
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1.5 mt-4 px-3 py-1.5 bg-accent-commit/10 border border-accent-commit/20 text-accent-commit font-mono text-[10px] uppercase tracking-widest rounded hover:bg-accent-commit/20 transition-all w-fit"
                             >
-                                <ExternalLink className="w-3 h-3" />
-                                View on StorageScan →
+                                View on StorageScan
                             </a>
 
-                            {/* Click to dismiss */}
                             <button
                                 onClick={() => { setShowCard(false); setTimeout(onDismiss, 300); }}
                                 className="absolute top-2 right-2 text-text-muted hover:text-text-primary text-xs font-mono"
                             >
-                                ✕
+                                x
                             </button>
                         </div>
                     </motion.div>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Download, Copy, Check, Loader2 } from 'lucide-react';
 import { HexCascade } from './effects/HexCascade';
 
 const API_URL = 'http://localhost:3000';
@@ -43,7 +42,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
 
             if (!res.ok) throw new Error(data.error || 'Store failed');
 
-            // Trigger hex cascade
             setCascadeData({
                 ciphertext: data.encryptedPayload || data.contentHash || '',
                 rootHash: data.rootHash,
@@ -88,43 +86,38 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-            {/* Header */}
             <div>
-                <h2 className="font-mono text-lg font-semibold tracking-wide flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-accent-store" />
+                <h2 className="font-mono text-lg font-semibold tracking-wide">
                     Agent Memory Vault
                 </h2>
                 <p className="text-sm text-text-muted mt-1">Encrypt, store, and retrieve agent memories on 0G decentralized storage.</p>
             </div>
 
-            {/* Tab switcher */}
             <div className="flex gap-px bg-border/50 p-px rounded w-fit">
                 <button
                     onClick={() => { setActiveTab('store'); setError(''); }}
                     className={`px-4 py-2 text-xs font-mono uppercase tracking-widest transition-all duration-200 rounded-l ${activeTab === 'store'
-                        ? 'bg-accent-store/15 text-accent-store border border-accent-store/30'
+                        ? 'bg-accent-store/10 text-accent-store border border-accent-store/30'
                         : 'bg-base-card text-text-muted hover:text-text-primary border border-transparent'
                         }`}
                 >
-                    <Lock className="w-3 h-3 inline mr-1.5 -mt-0.5" />Store
+                    Store
                 </button>
                 <button
                     onClick={() => { setActiveTab('retrieve'); setError(''); }}
                     className={`px-4 py-2 text-xs font-mono uppercase tracking-widest transition-all duration-200 rounded-r ${activeTab === 'retrieve'
-                        ? 'bg-accent-retrieve/15 text-accent-retrieve border border-accent-retrieve/30'
+                        ? 'bg-accent-retrieve/10 text-accent-retrieve border border-accent-retrieve/30'
                         : 'bg-base-card text-text-muted hover:text-text-primary border border-transparent'
                         }`}
                 >
-                    <Download className="w-3 h-3 inline mr-1.5 -mt-0.5" />Retrieve
+                    Retrieve
                 </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Left Column: Input (3/5 width) */}
                 <div className="lg:col-span-3 space-y-4">
                     {activeTab === 'store' ? (
                         <>
-                            {/* Store input */}
                             <div className="glass-panel-gradient rounded p-px">
                                 <div className="bg-base-card rounded p-4 relative overflow-hidden">
                                     <label className="label-caps block mb-2">Agent Memory Payload</label>
@@ -136,7 +129,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                         className="w-full bg-base border border-border rounded p-3 font-mono text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-store/50 resize-none transition-colors"
                                     />
 
-                                    {/* Hex cascade overlay */}
                                     <AnimatePresence>
                                         {showCascade && (
                                             <motion.div
@@ -158,13 +150,11 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                             <button
                                 onClick={handleStore}
                                 disabled={isLoading || !payload.trim()}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-accent-store/15 border border-accent-store/30 text-accent-store font-mono text-xs uppercase tracking-widest rounded hover:bg-accent-store/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-accent-store/10 border border-accent-store/30 text-accent-store font-mono text-xs uppercase tracking-widest rounded hover:bg-accent-store/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                             >
-                                {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                                Encrypt & Store on 0G
+                                {isLoading ? 'Processing...' : 'Encrypt & Store on 0G'}
                             </button>
 
-                            {/* Store result */}
                             <AnimatePresence>
                                 {result && (
                                     <motion.div
@@ -172,8 +162,8 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                         animate={{ opacity: 1, y: 0 }}
                                         className="glass-panel rounded p-4 space-y-3"
                                     >
-                                        <div className="label-caps text-accent-commit flex items-center gap-2">
-                                            <Check className="w-3 h-3" /> Stored on 0G
+                                        <div className="label-caps text-accent-commit">
+                                            Stored on 0G
                                         </div>
                                         <div className="space-y-2">
                                             {[
@@ -188,9 +178,9 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                                         {value.startsWith('0x') && (
                                                             <button
                                                                 onClick={() => copyHash(value)}
-                                                                className="text-text-muted hover:text-primary transition-colors"
+                                                                className="text-text-muted hover:text-primary transition-colors text-[10px] font-mono"
                                                             >
-                                                                {copiedHash === value ? <Check className="w-3 h-3 text-accent-commit" /> : <Copy className="w-3 h-3" />}
+                                                                {copiedHash === value ? 'Copied' : 'Copy'}
                                                             </button>
                                                         )}
                                                     </div>
@@ -203,7 +193,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                         </>
                     ) : (
                         <>
-                            {/* Retrieve input */}
                             <div className="glass-panel-gradient rounded p-px">
                                 <div className="bg-base-card rounded p-4">
                                     <label className="label-caps block mb-2">Root Hash</label>
@@ -217,16 +206,14 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                         <button
                                             onClick={handleRetrieve}
                                             disabled={isLoading || !rootHashInput.trim()}
-                                            className="flex items-center gap-2 px-4 py-2 bg-accent-retrieve/15 border border-accent-retrieve/30 text-accent-retrieve font-mono text-xs uppercase tracking-widest rounded hover:bg-accent-retrieve/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                            className="flex items-center gap-2 px-4 py-2 bg-accent-retrieve/10 border border-accent-retrieve/30 text-accent-retrieve font-mono text-xs uppercase tracking-widest rounded hover:bg-accent-retrieve/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         >
-                                            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                            Decrypt
+                                            {isLoading ? 'Processing...' : 'Decrypt'}
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Decrypted result */}
                             <AnimatePresence>
                                 {decryptedData && (
                                     <motion.div
@@ -234,8 +221,8 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                         animate={{ opacity: 1, y: 0 }}
                                         className="glass-panel rounded p-4 space-y-3"
                                     >
-                                        <div className="label-caps text-accent-commit flex items-center gap-2">
-                                            <Check className="w-3 h-3" /> Decrypted
+                                        <div className="label-caps text-accent-commit">
+                                            Decrypted
                                         </div>
                                         <div className="font-mono text-sm text-text-primary bg-base rounded p-3 border border-border">
                                             {decryptedData}
@@ -246,7 +233,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                         </>
                     )}
 
-                    {/* Error */}
                     {error && (
                         <div className="glass-panel rounded p-3 border-accent-danger/30 border">
                             <span className="label-caps text-accent-danger">Error:</span>
@@ -255,7 +241,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                     )}
                 </div>
 
-                {/* Right Column: Attestation Trace (2/5 width) */}
                 <div className="lg:col-span-2">
                     <div className="glass-panel rounded p-4 space-y-4 sticky top-6">
                         <div className="flex items-center justify-between">
@@ -266,7 +251,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                             </span>
                         </div>
 
-                        {/* Session root */}
                         <div className="bg-base rounded p-3 border border-primary/20">
                             <div className="label-caps mb-1">Session Root</div>
                             <div className="mono-hash text-primary">
@@ -277,7 +261,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                             </div>
                         </div>
 
-                        {/* Event timeline */}
                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
                             {events.length === 0 ? (
                                 <div className="text-center py-8">
@@ -292,7 +275,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                         transition={{ delay: i * 0.05 }}
                                         className="flex items-start gap-3 group"
                                     >
-                                        {/* Timeline dot */}
                                         <div className="mt-1.5 flex flex-col items-center">
                                             <div className={`w-2 h-2 rounded-full ${event.type === 'store' ? 'bg-accent-store' :
                                                 event.type === 'retrieve' ? 'bg-accent-retrieve' :
@@ -301,7 +283,6 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                             {i < events.length - 1 && <div className="w-px h-8 bg-border mt-1" />}
                                         </div>
 
-                                        {/* Event card */}
                                         <div className="flex-1 pb-3">
                                             <div className="flex items-center justify-between">
                                                 <span className={`font-mono text-[11px] uppercase tracking-widest ${event.type === 'store' ? 'text-accent-store' :
@@ -315,7 +296,7 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
                                                 </span>
                                             </div>
                                             <div className="mono-hash text-text-muted mt-1 truncate">
-                                                {event.data?.rootHash || event.data?.merkleRoot || '—'}
+                                                {event.data?.rootHash || event.data?.merkleRoot || '-'}
                                             </div>
                                         </div>
                                     </motion.div>

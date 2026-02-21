@@ -8,34 +8,34 @@ export default {
         extend: {
             colors: {
                 base: {
-                    DEFAULT: '#08081A',
-                    surface: '#12122A',
-                    elevated: '#1A1A3A',
-                    card: '#0E0E24',
+                    DEFAULT: '#000000',
+                    surface: '#0A0A0A',
+                    elevated: '#141414',
+                    card: '#0A0A0A',
                 },
                 primary: {
-                    DEFAULT: '#7C3AED',
-                    soft: '#A78BFA',
+                    DEFAULT: '#0066FF',
+                    soft: '#60A5FA',
                 },
                 accent: {
                     gold: '#F5A623',
                     rose: '#EC4899',
                     commit: '#34D399',
-                    store: '#818CF8',
+                    store: '#60A5FA',
                     retrieve: '#FBBF24',
                     danger: '#F43F5E',
                 },
                 text: {
-                    primary: '#E8E4F0',
-                    muted: '#6B6B8D',
+                    primary: '#E5E7EB',
+                    muted: '#6B7280',
                 },
                 border: {
-                    DEFAULT: 'rgba(124, 58, 237, 0.15)',
-                    strong: 'rgba(124, 58, 237, 0.3)',
+                    DEFAULT: 'rgba(255, 255, 255, 0.08)',
+                    strong: 'rgba(255, 255, 255, 0.15)',
                 },
             },
             fontFamily: {
-                sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                sans: ['Inter', 'system-ui', 'sans-serif'],
                 mono: ['Geist Mono', 'JetBrains Mono', 'monospace'],
             },
             borderRadius: {
@@ -57,7 +57,7 @@ export default {
             },
             keyframes: {
                 'pulse-ring': {
-                    '0%': { boxShadow: '0 0 0 0 rgba(124, 58, 237, 0.4)' },
+                    '0%': { boxShadow: '0 0 0 0 rgba(0, 102, 255, 0.4)' },
                     '70%': { boxShadow: '0 0 0 10px transparent' },
                     '100%': { boxShadow: '0 0 0 0 transparent' },
                 },
@@ -82,8 +82,8 @@ export default {
                     '50%': { backgroundPosition: '100% 50%' },
                 },
                 'heat-pulse': {
-                    '0%': { boxShadow: 'inset 0 0 0 0 rgba(124, 58, 237, 0.3)' },
-                    '50%': { boxShadow: 'inset 0 0 40px 10px rgba(124, 58, 237, 0.1)' },
+                    '0%': { boxShadow: 'inset 0 0 0 0 rgba(0, 102, 255, 0.3)' },
+                    '50%': { boxShadow: 'inset 0 0 40px 10px rgba(0, 102, 255, 0.1)' },
                     '100%': { boxShadow: 'inset 0 0 0 0 transparent' },
                 },
                 'slide-up': {

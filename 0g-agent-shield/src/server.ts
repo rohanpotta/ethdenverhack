@@ -2,7 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'node:http';
 import { Server as SocketServer } from 'socket.io';
-import { AgentVault } from './index.js';
+import { AgentVault } from './lib/vault.js';
+import { SharedMemoryBus } from './lib/shared-memory.js';
+import { HeartbeatDaemon } from './lib/heartbeat.js';
+import { AgentRouter } from './lib/agent-router.js';
+import { AutonomyEngine } from './lib/autonomy.js';
 import dotenv from 'dotenv';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +18,6 @@ dotenv.config({ path: join(__dirname, '../.env') });
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.IO with permissive CORS for local dev
 const io = new SocketServer(httpServer, {
     cors: { origin: '*', methods: ['GET', 'POST'] }
 });
@@ -25,9 +28,9 @@ app.use(express.json());
 // --- In-memory event log (last 100 events) ---
 interface VaultEvent {
     id: number;
-    type: 'store' | 'retrieve' | 'session_commit';
+    type: string;
     timestamp: number;
-    source: 'api' | 'mcp';
+    source: 'api' | 'mcp' | 'heartbeat' | 'autonomy';
     data: Record<string, any>;
 }
 const eventLog: VaultEvent[] = [];
@@ -47,7 +50,7 @@ function pushEvent(type: VaultEvent['type'], source: VaultEvent['source'], data:
     console.log(`[WS] Emitted vault:event #${event.id} (${type})`);
 }
 
-// --- Initialize Vault ---
+// --- Initialize Vault + Subsystems ---
 const privateKey = process.env.PRIVATE_KEY!;
 const evmRpc = process.env.EVM_RPC!;
 const indexerRpc = process.env.INDEXER_RPC!;
@@ -58,6 +61,60 @@ if (!privateKey || !evmRpc || !indexerRpc) {
 }
 
 const vault = new AgentVault({ privateKey, evmRpc, indexerRpc });
+const sharedMemory = new SharedMemoryBus(vault);
+const heartbeat = new HeartbeatDaemon(vault, sharedMemory, {
+    autonomousMode: process.env.AUTONOMY_MODE === 'true',
+    onBeat: (record) => {
+        pushEvent('heartbeat', 'heartbeat', {
+            seq: record.sequenceNumber,
+            uptime: record.uptime,
+            autonomous: record.autonomousMode,
+        });
+    },
+    onTaskComplete: (result) => {
+        pushEvent('task_complete', 'heartbeat', {
+            task: result.taskName,
+            success: result.success,
+            duration: result.duration,
+        });
+    },
+});
+const agentRouter = new AgentRouter(vault, sharedMemory);
+const autonomyEngine = new AutonomyEngine(vault, sharedMemory, heartbeat, agentRouter, {
+    level: (process.env.AUTONOMY_LEVEL as any) ?? 'monitor',
+    onDecision: (decision) => {
+        pushEvent('autonomy_decision', 'autonomy', {
+            id: decision.id,
+            action: decision.action,
+            trigger: decision.trigger,
+            severity: decision.diagnostic.severity,
+        });
+        io.emit('autonomy:decision', decision);
+    },
+    onFixPushed: (fix) => {
+        pushEvent('autonomy_fix', 'autonomy', {
+            id: fix.id,
+            handler: fix.handler,
+            applied: fix.result.applied,
+        });
+        io.emit('autonomy:fix', fix);
+    },
+});
+
+sharedMemory.setBroadcastHandler((channel, entry) => {
+    pushEvent('shared_memory', 'api', { channel, entryId: entry.id, rootHash: entry.rootHash });
+    io.emit('memory:entry', { channel, entry });
+});
+
+agentRouter.setEventHandlers({
+    onSpawn: (desc) => {
+        pushEvent('agent_spawned', 'api', { id: desc.id, role: desc.role, channel: desc.channelName });
+        io.emit('agent:spawned', desc);
+    },
+    onMessage: (ch, msg) => {
+        io.emit('agent:message', { channel: ch, message: msg });
+    },
+});
 
 // --- REST Endpoints ---
 

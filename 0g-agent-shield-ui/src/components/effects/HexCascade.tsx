@@ -41,7 +41,7 @@ export function HexCascade({ ciphertext, rootHash, onComplete }: HexCascadeProps
 
         const draw = () => {
             // Fade effect
-            ctx.fillStyle = 'rgba(8, 8, 16, 0.15)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
@@ -54,9 +54,9 @@ export function HexCascade({ ciphertext, rootHash, onComplete }: HexCascadeProps
                 // Color gradient from accent-0g to accent-store
                 const progress = frameCount / maxFrames;
                 if (progress < 0.7) {
-                    ctx.fillStyle = `rgba(0, 229, 195, ${0.7 + Math.random() * 0.3})`;
+                    ctx.fillStyle = `rgba(0, 102, 255, ${0.7 + Math.random() * 0.3})`;
                 } else {
-                    ctx.fillStyle = `rgba(107, 127, 255, ${0.7 + Math.random() * 0.3})`;
+                    ctx.fillStyle = `rgba(96, 165, 250, ${0.7 + Math.random() * 0.3})`;
                 }
 
                 ctx.fillText(char, x, y);
@@ -73,11 +73,11 @@ export function HexCascade({ ciphertext, rootHash, onComplete }: HexCascadeProps
                 requestAnimationFrame(draw);
             } else {
                 // Collapse to rootHash
-                ctx.fillStyle = 'rgba(8, 8, 16, 0.95)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.font = `14px "JetBrains Mono", monospace`;
-                ctx.fillStyle = '#00FFB2';
+                ctx.fillStyle = '#0066FF';
                 ctx.textAlign = 'center';
                 ctx.fillText(rootHash, canvas.width / 2, canvas.height / 2);
 

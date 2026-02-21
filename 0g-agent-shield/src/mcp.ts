@@ -7,7 +7,7 @@
  *   - Cursor
  *   - Any MCP-compatible agent
  *
- * Tools:
+ * Tools (Core):
  *   vault_store          — Encrypt + store data on 0G
  *   vault_retrieve       — Download + decrypt data from 0G
  *   vault_session_log    — Show current session's attestation log
@@ -16,12 +16,28 @@
  *   vault_status         — Show vault status and session info
  *   vault_share          — Store + generate share descriptor for another agent
  *   vault_import         — Retrieve shared memory from another agent
+ *
+ * Tools (Shared Memory):
+ *   memory_write         — Write data to a named shared memory channel
+ *   memory_read          — Read recent entries from a shared memory channel
+ *   memory_channels      — List all shared memory channels
+ *
+ * Tools (Autonomy):
+ *   autonomy_status      — Show heartbeat, agent tree, and autonomy engine status
+ *   autonomy_set_level   — Set autonomy level (off/monitor/suggest/autonomous)
+ *   agent_spawn          — Spawn a sub-agent with shared context
+ *   agent_list           — List all sub-agents and their status
+ *   agent_message        — Send a message to a sub-agent
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { AgentVault } from "./lib/vault.js";
+import { SharedMemoryBus } from "./lib/shared-memory.js";
+import { HeartbeatDaemon } from "./lib/heartbeat.js";
+import { AgentRouter } from "./lib/agent-router.js";
+import { AutonomyEngine } from "./lib/autonomy.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -45,18 +61,36 @@ for (const key of required) {
   }
 }
 
-// --- Initialize Vault ---
+// --- Initialize Vault + Subsystems ---
 const vault = new AgentVault({
   privateKey: process.env.PRIVATE_KEY!,
   evmRpc: process.env.EVM_RPC!,
   indexerRpc: process.env.INDEXER_RPC!,
-  vaultSecret: process.env.VAULT_SECRET, // uses PRIVATE_KEY if not set
+  vaultSecret: process.env.VAULT_SECRET,
+});
+
+const sharedMemory = new SharedMemoryBus(vault);
+const heartbeat = new HeartbeatDaemon(vault, sharedMemory, {
+  autonomousMode: process.env.AUTONOMY_MODE === "true",
+  baseIntervalMs: parseInt(process.env.HEARTBEAT_INTERVAL_MS ?? "30000", 10),
+});
+const agentRouter = new AgentRouter(vault, sharedMemory);
+const autonomyEngine = new AutonomyEngine(vault, sharedMemory, heartbeat, agentRouter, {
+  level: (process.env.AUTONOMY_LEVEL as any) ?? "monitor",
+});
+
+sharedMemory.setBroadcastHandler((channel, entry) => {
+  pushToDashboard('shared_memory', { channel, entry });
+});
+agentRouter.setEventHandlers({
+  onSpawn: (desc) => pushToDashboard('agent_spawned', desc),
+  onMessage: (ch, msg) => pushToDashboard('agent_message', { channel: ch, message: msg }),
 });
 
 // --- MCP Server ---
 const server = new McpServer({
   name: "silo",
-  version: "1.0.0",
+  version: "2.0.0",
 });
 
 // TOOL 1: Store encrypted memory
@@ -295,12 +329,363 @@ server.tool(
   }
 );
 
+// =========================================================================
+// SHARED MEMORY TOOLS
+// =========================================================================
+
+// TOOL 9: Write to shared memory channel
+server.tool(
+  "memory_write",
+  {
+    channel: z.string().describe("Named channel to write to (created automatically if new)"),
+    data: z.string().describe("Data to write to the shared memory channel"),
+    metadata: z.string().optional().describe("Optional JSON metadata"),
+  },
+  async ({ channel, data, metadata }) => {
+    try {
+      const parsedMeta = metadata ? JSON.parse(metadata) : undefined;
+      const entry = await sharedMemory.write(channel, data, parsedMeta);
+      pushToDashboard('memory_write', { channel, rootHash: entry.rootHash, entryId: entry.id });
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `✅ Written to shared memory channel "${channel}"`,
+            `   Entry ID:   ${entry.id}`,
+            `   Root Hash:  ${entry.rootHash}`,
+            `   Linked to:  ${entry.prevRootHash ?? "none (first entry)"}`,
+            ``,
+            `   Other agents subscribed to "${channel}" will receive this in real-time.`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Memory write failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 10: Read from shared memory channel
+server.tool(
+  "memory_read",
+  {
+    channel: z.string().describe("Channel name to read from"),
+    limit: z.number().optional().describe("Max entries to return (default 10)"),
+  },
+  async ({ channel, limit }) => {
+    try {
+      const entries = sharedMemory.read(channel, limit ?? 10);
+      if (entries.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: `📭 Channel "${channel}" is empty or does not exist.`,
+          }],
+        };
+      }
+
+      const formatted = entries.map((e, i) =>
+        `  ${i + 1}. [${new Date(e.timestamp).toISOString()}] ${e.data.slice(0, 200)}${e.data.length > 200 ? "..." : ""}`
+      ).join("\n");
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `📋 Shared Memory — "${channel}" (${entries.length} entries)`,
+            ``,
+            formatted,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Memory read failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 11: List shared memory channels
+server.tool(
+  "memory_channels",
+  {},
+  async () => {
+    try {
+      const channels = sharedMemory.listChannels();
+      if (channels.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: "📭 No shared memory channels exist yet. Use memory_write to create one.",
+          }],
+        };
+      }
+
+      const formatted = channels.map(c =>
+        `  • ${c.name} — ${c.entryCount} entries, ${c.subscribers.length} subscribers`
+      ).join("\n");
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `📡 Shared Memory Channels (${channels.length})`,
+            ``,
+            formatted,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Channel list failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// =========================================================================
+// AUTONOMY + HEARTBEAT TOOLS
+// =========================================================================
+
+// TOOL 12: Autonomy status
+server.tool(
+  "autonomy_status",
+  {},
+  async () => {
+    try {
+      const status = autonomyEngine.status();
+      const hb = status.heartbeat;
+      const agents = status.agents;
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `🤖 SILO — Autonomy Engine`,
+            ``,
+            `   Level:        ${status.level}`,
+            `   Running:      ${status.running}`,
+            `   Heartbeat:    ${hb.running ? "active" : "stopped"} (${hb.sequenceNumber} beats)`,
+            `   Uptime:       ${Math.round(hb.uptime / 1000)}s`,
+            `   Sub-agents:   ${agents.childCount}`,
+            `   Decisions:    ${status.recentDecisions.length}`,
+            `   Fixes:        ${status.recentFixes.length}`,
+            `   Diagnostics:  ${status.diagnosticHandlers.join(", ") || "none"}`,
+            ``,
+            `   Tasks:`,
+            ...hb.registeredTasks.map(t =>
+              `     • ${t.name} (${t.type}) — ${t.enabled ? "active" : "disabled"}, ran ${t.runCount}x`
+            ),
+            ``,
+            `   Sub-agents:`,
+            ...(agents.children.length === 0
+              ? ["     (none)"]
+              : agents.children.map(c =>
+                `     • ${c.id.slice(0, 8)} [${c.role}] — ${c.status} (${c.autonomy})`
+              )),
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Status failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 13: Set autonomy level
+server.tool(
+  "autonomy_set_level",
+  {
+    level: z.enum(["off", "monitor", "suggest", "autonomous"]).describe(
+      "Autonomy level: off (disabled), monitor (observe only), suggest (recommend fixes), autonomous (auto-fix)"
+    ),
+  },
+  async ({ level }) => {
+    try {
+      autonomyEngine.setLevel(level);
+
+      if (level !== "off" && !autonomyEngine.isRunning) {
+        autonomyEngine.start();
+      } else if (level === "off" && autonomyEngine.isRunning) {
+        autonomyEngine.stop();
+      }
+
+      pushToDashboard('autonomy_level_changed', { level });
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `⚙️ Autonomy level set to: ${level}`,
+            ``,
+            level === "off" ? "   Engine stopped. No autonomous actions will occur." :
+            level === "monitor" ? "   Monitoring mode. Issues will be logged but not acted on." :
+            level === "suggest" ? "   Suggest mode. Fixes will be recommended but not applied." :
+            "   🚀 FULLY AUTONOMOUS. Heartbeat active. Fixes will be applied automatically.",
+            ``,
+            level === "autonomous" ? "   The heartbeat daemon is now running periodic health checks,\n   auto-committing sessions, and syncing shared memory." : "",
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Failed to set level: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 14: Spawn a sub-agent
+server.tool(
+  "agent_spawn",
+  {
+    role: z.string().describe("Role/purpose of the sub-agent (e.g. 'code-reviewer', 'bug-fixer', 'researcher')"),
+    context: z.string().optional().describe("Initial context/instructions to pass to the sub-agent"),
+    contextRootHashes: z.string().optional().describe("Comma-separated 0G root hashes of shared memory to inherit"),
+    autonomy: z.enum(["supervised", "autonomous"]).optional().describe("Autonomy level for the sub-agent"),
+  },
+  async ({ role, context, contextRootHashes, autonomy }) => {
+    try {
+      const rootHashes = contextRootHashes?.split(",").map(h => h.trim()).filter(Boolean) ?? [];
+
+      const descriptor = await agentRouter.spawn({
+        role,
+        contextData: context,
+        contextRootHashes: rootHashes,
+        autonomy: autonomy ?? "supervised",
+      });
+
+      pushToDashboard('agent_spawned', descriptor);
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `🚀 Sub-agent spawned`,
+            ``,
+            `   ID:        ${descriptor.id}`,
+            `   Role:      ${descriptor.role}`,
+            `   Channel:   ${descriptor.channelName}`,
+            `   Autonomy:  ${descriptor.autonomy}`,
+            `   Status:    ${descriptor.status}`,
+            ``,
+            `   Context:   ${rootHashes.length > 0 ? `${rootHashes.length} shared memory entries inherited` : "inline context provided"}`,
+            ``,
+            `   Use agent_message to communicate with this agent.`,
+            `   Use memory_read on channel "${descriptor.channelName}" to see messages.`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Spawn failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 15: List sub-agents
+server.tool(
+  "agent_list",
+  {},
+  async () => {
+    try {
+      const status = agentRouter.status();
+
+      if (status.children.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: "📭 No sub-agents spawned. Use agent_spawn to create one.",
+          }],
+        };
+      }
+
+      const formatted = status.children.map(c => [
+        `  • ${c.id.slice(0, 8)}... [${c.role}]`,
+        `    Status:   ${c.status}`,
+        `    Channel:  ${c.channelName}`,
+        `    Autonomy: ${c.autonomy}`,
+        `    Context:  ${c.contextRootHashes.length} inherited entries`,
+        `    Created:  ${new Date(c.createdAt).toISOString()}`,
+      ].join("\n")).join("\n\n");
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `🤖 Sub-agents (${status.children.length})`,
+            ``,
+            formatted,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ List failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 16: Send message to a sub-agent
+server.tool(
+  "agent_message",
+  {
+    agentId: z.string().describe("The sub-agent ID to message"),
+    message: z.string().describe("The message/instruction to send"),
+  },
+  async ({ agentId, message }) => {
+    try {
+      const entry = await agentRouter.instruct(agentId, message);
+      pushToDashboard('agent_message', { agentId, channel: entry.channel });
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `📨 Message sent to sub-agent ${agentId.slice(0, 8)}...`,
+            `   Channel:    ${entry.channel}`,
+            `   Root Hash:  ${entry.rootHash}`,
+            ``,
+            `   The message is now on the shared memory channel,`,
+            `   encrypted and persisted on 0G.`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Message failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
 // --- Launch ---
 async function main() {
   await vault.init();
+
+  if (process.env.AUTONOMY_MODE === "true") {
+    autonomyEngine.start();
+    console.error("🤖 Autonomy engine started in autonomous mode");
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("🛡️ SILO MCP server running"); // stderr so it doesn't interfere with MCP stdio
+  console.error("🛡️ SILO MCP server running (v2.0 — shared memory + autonomy)");
 }
 
 main().catch((err) => {
