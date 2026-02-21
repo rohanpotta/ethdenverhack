@@ -1,5 +1,5 @@
 {
-  "name": "silo",
+  "name": "silo-agent",
   "version": "1.0.0",
   "description": "Encrypted private memory + execution attestation for AI agents on 0G",
   "type": "module",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "silo": "./bin/silo.js"
+    "silo-agent": "./bin/silo.js"
   },
   "files": [
     "build",

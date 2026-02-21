@@ -92,12 +92,17 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                 </div>
 
                 <div className="space-y-4">
-                    <StepCard step={1} title="Clone & Install">
-                        <CopyBlock code={`git clone https://github.com/rohanpotta/ethdenverhack.git
-cd ethdenverhack/0g-agent-shield
-npm install
-cp .env.example .env`} />
-                        <p className="text-xs text-text-muted mt-2 leading-relaxed">
+                    <StepCard step={1} title="Install">
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            <strong className="text-text-primary">Option A:</strong> Scaffold a new agent project
+                        </p>
+                        <CopyBlock code={`npx create-silo-app my-agent
+cd my-agent`} />
+                        <p className="text-xs text-text-muted mt-3 mb-3 leading-relaxed">
+                            <strong className="text-text-primary">Option B:</strong> Add to an existing project
+                        </p>
+                        <CopyBlock code={`npm install silo-agent`} />
+                        <p className="text-xs text-text-muted mt-3 leading-relaxed">
                             Edit <code className="text-primary bg-primary/10 px-1 rounded">.env</code> and
                             add your 0G/EVM wallet private key (64-char hex, no 0x prefix).
                             Need a wallet? Export from MetaMask, or generate one: <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>.
@@ -121,8 +126,8 @@ npm run doctor`} />
                         <CopyBlock lang="json" code={`{
   "mcpServers": {
     "silo": {
-      "command": "node",
-      "args": ["/path/to/0g-agent-shield/build/mcp.js"],
+      "command": "npx",
+      "args": ["silo-agent", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_0g_wallet_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -132,7 +137,7 @@ npm run doctor`} />
   }
 }`} />
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
-                            Replace <code className="text-primary bg-primary/10 px-1 rounded">/path/to/</code> with the absolute path to your install.
+                            No absolute paths needed — <code className="text-primary bg-primary/10 px-1 rounded">npx</code> resolves the package from npm automatically.
                             {' '}<code className="text-primary bg-primary/10 px-1 rounded">PRIVATE_KEY</code> is your 0G/EVM wallet private key (64-char hex, no 0x prefix).
                             It's used to sign 0G Storage transactions and as the seed for AES-256 vault encryption.
                             Generate one with MetaMask or <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>,

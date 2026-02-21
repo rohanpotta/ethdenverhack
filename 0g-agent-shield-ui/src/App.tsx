@@ -55,8 +55,16 @@ function App() {
     traceRootHash: string;
     traceTxHash: string;
   } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
 
   const [stats, setStats] = useState({ stores: 0, retrieves: 0, bytes: 0, avgCommitMs: 0 });
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     const s = io(API_URL, {
@@ -132,6 +140,30 @@ function App() {
         <CommitCeremony commitData={commitData} onDismiss={() => setCommitData(null)} />
       )}
 
+      {/* Toast notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: 0 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-6 left-20 z-50 max-w-sm"
+          >
+            <div className={`glass-panel border rounded-lg px-4 py-3 flex items-start gap-3 shadow-lg ${toast.type === 'error' ? 'border-accent-danger/40' : 'border-primary/40'
+              }`}>
+              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${toast.type === 'error' ? 'bg-accent-danger' : 'bg-primary'
+                }`} />
+              <span className="text-xs text-text-primary leading-relaxed">{toast.message}</span>
+              <button
+                onClick={() => setToast(null)}
+                className="text-text-muted hover:text-text-primary text-xs ml-2 flex-shrink-0"
+              >✕</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className="h-12 flex items-center justify-between px-5 glass-panel border-b border-border z-30 relative">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold tracking-widest">
@@ -206,27 +238,29 @@ function App() {
 
           <button
             onClick={async () => {
-              if (!connected) return;
+              if (!connected) {
+                setToast({ message: 'Backend offline — run the Silo server locally on :3000 to commit sessions', type: 'info' });
+                return;
+              }
               const btn = document.activeElement as HTMLButtonElement;
               btn?.classList.add('animate-pulse');
               try {
                 const res = await fetch(`${API_URL}/api/attest`, { method: 'POST' });
                 if (!res.ok) {
                   const err = await res.json().catch(() => ({ error: 'Commit failed' }));
-                  alert(`Commit failed: ${err.error || 'Unknown error'}`);
+                  setToast({ message: `Commit failed: ${err.error || 'Unknown error'}`, type: 'error' });
                 }
               } catch {
-                alert('Commit failed: backend not reachable');
+                setToast({ message: 'Backend not reachable — is the Silo server running on localhost:3000?', type: 'error' });
               } finally {
                 btn?.classList.remove('animate-pulse');
               }
             }}
-            className={`w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 ${
-              connected
-                ? 'text-text-muted hover:text-accent-commit hover:bg-accent-commit/10'
-                : 'text-text-muted/30 cursor-not-allowed'
-            }`}
-            title={connected ? 'COMMIT SESSION' : 'Connect backend to commit'}
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 ${connected
+              ? 'text-text-muted hover:text-accent-commit hover:bg-accent-commit/10'
+              : 'text-text-muted/30 cursor-not-allowed opacity-50'
+              }`}
+            title={connected ? 'Commit session — attest Merkle root on-chain' : 'Backend offline — run Silo server locally to enable commits'}
           >
             <span className="text-[9px] font-semibold tracking-wider">ATT</span>
           </button>

@@ -60,7 +60,7 @@ Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_con
   "mcpServers": {
     "silo": {
       "command": "npx",
-      "args": ["silo", "mcp"],
+      "args": ["silo-agent", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -75,7 +75,7 @@ No build step or absolute paths needed — `npx` resolves the package from npm.
 
 1. Ask Claude: *"Store my medical diagnosis securely"*
 2. Claude responds with a root hash and attestation event number
-3. Verify: `npx silo verify <rootHash>`
+3. Verify: `npx silo-agent verify <rootHash>`
 
 ---
 
@@ -132,11 +132,11 @@ The dashboard connects to the API server via WebSocket for live event streaming.
 ## Use As a Library
 
 ```bash
-npm install silo
+npm install silo-agent
 ```
 
 ```typescript
-import { AgentVault } from "silo";
+import { AgentVault } from "silo-agent";
 
 const vault = new AgentVault({
   privateKey: "abc123...",

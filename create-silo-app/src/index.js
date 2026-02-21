@@ -66,10 +66,10 @@ writeFileSync(join(projectDir, 'package.json'), JSON.stringify({
     scripts: {
         build: 'tsc',
         demo: 'node build/agent.js',
-        doctor: 'npx silo doctor',
+        doctor: 'npx silo-agent doctor',
     },
     dependencies: {
-        silo: '^1.0.0',
+        'silo-agent': '^1.0.0',
         dotenv: '^16.4.7',
     },
     devDependencies: {
@@ -128,7 +128,7 @@ writeFileSync(join(projectDir, 'claude-desktop-config.json'), JSON.stringify({
     mcpServers: {
         silo: {
             command: 'npx',
-            args: ['silo', 'mcp'],
+            args: ['silo-agent', 'mcp'],
             env: {
                 PRIVATE_KEY: 'your_private_key',
                 EVM_RPC: 'https://evmrpc-testnet.0g.ai',
@@ -151,7 +151,7 @@ writeFileSync(join(projectDir, 'src/agent.ts'), `/**
  *   3. Committing a Merkle attestation of the session
  */
 
-import { AgentVault } from "silo";
+import { AgentVault } from "silo-agent";
 import dotenv from "dotenv";
 
 dotenv.config();

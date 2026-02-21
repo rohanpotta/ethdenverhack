@@ -27,11 +27,11 @@ npm run build && npm run demo
 ### Option B: Add to an existing project
 
 ```bash
-npm install silo
+npm install silo-agent
 ```
 
 ```typescript
-import { AgentVault } from "silo";
+import { AgentVault } from "silo-agent";
 
 const vault = new AgentVault({
   privateKey: process.env.PRIVATE_KEY!,
@@ -67,7 +67,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "silo": {
       "command": "npx",
-      "args": ["silo", "mcp"],
+      "args": ["silo-agent", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_0g_wallet_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -85,11 +85,11 @@ Restart Claude Desktop. Your agent now has 8 vault tools: `vault_store`, `vault_
 ### CLI Tools
 
 ```bash
-npx silo mcp           # Start MCP server
-npx silo doctor        # Validate environment
-npx silo demo          # Full demo cycle
-npx silo verify <hash> # Verify stored data
-npx silo start         # API + WebSocket server
+npx silo-agent mcp           # Start MCP server
+npx silo-agent doctor        # Validate environment
+npx silo-agent demo          # Full demo cycle
+npx silo-agent verify <hash> # Verify stored data
+npx silo-agent start         # API + WebSocket server
 ```
 
 ## Multi-Agent Sharing
