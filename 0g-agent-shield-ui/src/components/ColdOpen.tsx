@@ -24,7 +24,7 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
         offscreen.height = sampleH;
         const offCtx = offscreen.getContext('2d')!;
 
-        offCtx.font = 'bold 80px "Inter", system-ui, sans-serif';
+        offCtx.font = 'bold 140px "Inter", system-ui, sans-serif';
         offCtx.textAlign = 'center';
         offCtx.textBaseline = 'middle';
         offCtx.fillStyle = '#fff';
