@@ -1,0 +1,384 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── SILO Design Tokens — Deep Violet ── */
+:root {
+  --bg-base: #08081A;
+  --bg-surface: #12122A;
+  --bg-elevated: #1A1A3A;
+  --primary: #7C3AED;
+  --primary-soft: #A78BFA;
+  --accent-gold: #F5A623;
+  --accent-rose: #EC4899;
+  --accent-commit: #34D399;
+  --accent-store: #818CF8;
+  --accent-retrieve: #FBBF24;
+  --accent-danger: #F43F5E;
+  --text-primary: #E8E4F0;
+  --text-muted: #6B6B8D;
+  --border: rgba(124, 58, 237, 0.15);
+  --border-strong: rgba(124, 58, 237, 0.3);
+  --glow: rgba(124, 58, 237, 0.4);
+  --glow-gold: rgba(245, 166, 35, 0.3);
+}
+
+/* ── Custom property for conic angle animation ── */
+@property --conic-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@layer base {
+  body {
+    @apply bg-base text-text-primary antialiased overflow-x-hidden;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background-color: var(--bg-base);
+  }
+
+  ::selection {
+    background: rgba(124, 58, 237, 0.3);
+    color: #E8E4F0;
+  }
+}
+
+@layer components {
+
+  /* ── 1. Glassmorphism Panels ── */
+  .glass-panel {
+    background: rgba(18, 18, 42, 0.5);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid var(--border);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-panel:hover {
+    border-color: var(--border-strong);
+  }
+
+  /* ── 2. Rotating Conic-Gradient Card Borders ── */
+  .glass-card {
+    background: rgba(18, 18, 42, 0.5);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--conic-angle),
+        transparent 0%,
+        var(--primary) 10%,
+        var(--primary-soft) 20%,
+        transparent 30%,
+        transparent 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: rotate-conic 8s linear infinite;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+  }
+
+  .glass-card:hover::before {
+    opacity: 1;
+    animation-duration: 3s;
+  }
+
+  /* Glow layer behind rotating border */
+  .glass-card::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--conic-angle),
+        transparent 0%,
+        var(--primary) 10%,
+        var(--primary-soft) 20%,
+        transparent 30%,
+        transparent 100%);
+    filter: blur(20px);
+    opacity: 0;
+    animation: rotate-conic 8s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+  }
+
+  .glass-card:hover::after {
+    opacity: 0.3;
+  }
+
+  /* ── Glassmorphism panel with gradient border ── */
+  .glass-panel-gradient {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(167, 139, 250, 0.06));
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Mono hash display ── */
+  .mono-hash {
+    font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Label style (Space Grotesk 11px uppercase) ── */
+  .label-caps {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ── 8. Heat map glow on active panels ── */
+  .heat-ping {
+    animation: heat-pulse 0.8s ease-out;
+  }
+
+  /* ── Glow ring for live states ── */
+  .glow-ring-primary {
+    box-shadow: 0 0 0 0 var(--glow);
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* ── 5. 3D Perspective Dot Grid ── */
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(124, 58, 237, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dot-grid-3d {
+    background-image: radial-gradient(circle, rgba(124, 58, 237, 0.1) 1px, transparent 1px);
+    background-size: 28px 28px;
+    transform: perspective(600px) rotateX(45deg);
+    transform-origin: center 120%;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent 80%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent 80%);
+    height: 300px;
+    position: absolute;
+    bottom: 0;
+    left: -10%;
+    right: -10%;
+    pointer-events: none;
+  }
+
+  /* ── CRT scan-line loading bar ── */
+  .scan-loading {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.08), transparent);
+    animation: scan-line 2s linear infinite;
+  }
+
+  /* ── 7. Animated Gradient Text ── */
+  .gradient-text {
+    background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 50%, #C4B5FD 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 6s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+
+  /* ── 4. Noise Texture Overlay ── */
+  .grain-overlay {
+    position: relative;
+  }
+
+  .grain-overlay::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: overlay;
+  }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.4);
+}
+
+/* ── Animations ── */
+@keyframes rotate-conic {
+  to {
+    --conic-angle: 360deg;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--glow);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes gradient-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes heat-pulse {
+  0% {
+    box-shadow: inset 0 0 0 0 rgba(124, 58, 237, 0.3);
+  }
+
+  50% {
+    box-shadow: inset 0 0 40px 10px rgba(124, 58, 237, 0.1);
+  }
+
+  100% {
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}
+
+@keyframes blink-cursor {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes float-particle {
+
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.3;
+  }
+
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(-10px) translateX(-5px);
+    opacity: 0.4;
+  }
+
+  75% {
+    transform: translateY(-30px) translateX(15px);
+    opacity: 0.5;
+  }
+}
+
+.cursor-blink {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+/* ── 1. Animated Gradient Mesh Background ── */
+.gradient-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gradient-mesh::before {
+  content: '';
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 30%, rgba(124, 58, 237, 0.12), transparent),
+    radial-gradient(ellipse 500px 500px at 70% 60%, rgba(167, 139, 250, 0.08), transparent),
+    radial-gradient(ellipse 400px 300px at 50% 80%, rgba(236, 72, 153, 0.05), transparent);
+  animation: mesh-drift 20s ease-in-out infinite;
+}
+
+@keyframes mesh-drift {
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  33% {
+    transform: translate(30px, -20px) rotate(1deg);
+  }
+
+  66% {
+    transform: translate(-20px, 15px) rotate(-1deg);
+  }
+}

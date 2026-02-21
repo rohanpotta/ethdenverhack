@@ -1,0 +1,41 @@
+{
+  "name": "silo",
+  "version": "1.0.0",
+  "description": "Encrypted private memory + execution attestation for AI agents on 0G",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/server.js",
+    "mcp": "node build/mcp.js",
+    "verify": "node build/verify.js",
+    "doctor": "node build/doctor.js",
+    "demo": "node build/demo.js",
+    "verify-flow": "node build/verify-flow.js",
+    "test": "tsc && node --test 'build/tests/*.test.js'"
+  },
+  "keywords": [
+    "0g",
+    "ai-agents",
+    "privacy",
+    "mcp",
+    "openclaw",
+    "attestation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@0glabs/0g-ts-sdk": "0.3.3",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.10",
+    "typescript": "^5.7.3"
+  }
+}
