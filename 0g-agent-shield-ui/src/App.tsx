@@ -238,9 +238,9 @@ function App() {
               >
                 <div className="flex items-center gap-2">
                   {reconnecting ? (
-                    <span className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-text-muted/70 animate-pulse" />
                   ) : (
-                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-primary glow-ring-primary' : 'bg-accent-danger'}`} />
+                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-primary glow-ring-primary' : 'bg-text-muted/70'}`} />
                   )}
                   <span className="text-[10px] font-mono text-text-muted group-hover:text-text-primary transition-colors truncate max-w-[120px] sm:max-w-[200px]">
                     {apiUrl.replace(/^https?:\/\//, '')}
