@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "node build/server.js",
+    "start": "SILO_MANUAL_START=1 node build/server.js",
     "mcp": "node build/mcp.js",
     "verify": "node build/verify.js",
     "doctor": "node build/doctor.js",

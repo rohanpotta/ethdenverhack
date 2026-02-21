@@ -17,6 +17,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config();
 
+if (process.env.SILO_MANUAL_START !== '1' && process.env.ALLOW_AUTO_SERVER !== '1') {
+    console.error('SILO server start blocked: set SILO_MANUAL_START=1 for intentional local runs.');
+    process.exit(1);
+}
+
 const app = express();
 const httpServer = createServer(app);
 
