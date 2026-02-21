@@ -21,7 +21,7 @@ interface VaultEvent {
   data: Record<string, any>;
 }
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const NAV_ITEMS: { id: View; label: string }[] = [
   { id: 'guide', label: 'GUIDE' },
