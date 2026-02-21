@@ -68,8 +68,8 @@ export function EventLog({ events }: { events: VaultEvent[] }) {
                                 >
                                     <div className="col-span-1 font-mono text-xs text-text-muted">{event.id}</div>
                                     <div className="col-span-2 flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${config.color.replace('text-', 'bg-')}`} />
-                                        <span className={`font-mono text-[11px] uppercase tracking-widest ${config.color}`}>{config.label}</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${config?.color ? config.color.replace('text-', 'bg-') : 'bg-gray-500'}`} />
+                                        <span className={`font-mono text-[11px] uppercase tracking-widest ${config?.color || 'text-gray-500'}`}>{config?.label || event.type || 'UNKNOWN'}</span>
                                     </div>
                                     <div className="col-span-1">
                                         <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider ${event.source === 'mcp' ? 'bg-primary/10 text-primary' : 'bg-accent-store/10 text-accent-store'
