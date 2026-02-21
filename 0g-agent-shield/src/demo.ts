@@ -1,5 +1,5 @@
 /**
- * 0G Agent Shield — Demo
+ * SILO — Demo
  *
  * Runs a complete end-to-end cycle that you can show judges:
  *   1. Store encrypted data

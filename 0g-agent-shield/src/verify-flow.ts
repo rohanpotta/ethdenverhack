@@ -1,5 +1,5 @@
 /**
- * 0G Agent Shield — Flow contract verification
+ * SILO — Flow contract verification
  *
  * Reads the Galileo testnet Flow contract state and recent Submit events
  * to verify whether submit() failures are due to testnet infrastructure

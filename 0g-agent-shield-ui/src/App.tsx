@@ -7,11 +7,12 @@ import { AgentsPanel } from './components/AgentsPanel';
 import { EventLog } from './components/EventLog';
 import { MerkleTree } from './components/MerkleTree';
 import { SdkDiffPanel } from './components/SdkDiffPanel';
+import { GetStartedPanel } from './components/GetStartedPanel';
 import { CommitCeremony } from './components/CommitCeremony';
-import { Shield, Lock, Users, ScrollText, GitBranch, Code2, GitCommitHorizontal, Activity, WifiOff } from 'lucide-react';
+import { Shield, Lock, Users, ScrollText, GitBranch, Code2, BookOpen, GitCommitHorizontal, Activity, WifiOff } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 
-type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk';
+type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk' | 'guide';
 
 interface VaultEvent {
   id: number;
@@ -24,6 +25,7 @@ interface VaultEvent {
 const API_URL = 'http://localhost:3000';
 
 const NAV_ITEMS: { id: View; icon: typeof Lock; label: string }[] = [
+  { id: 'guide', icon: BookOpen, label: 'GUIDE' },
   { id: 'vault', icon: Lock, label: 'VAULT' },
   { id: 'merkle', icon: GitBranch, label: 'MERKLE' },
   { id: 'agents', icon: Users, label: 'AGENTS' },
@@ -241,6 +243,11 @@ function App() {
 
           <div className="flex-1 overflow-y-auto p-6 relative">
             <AnimatePresence mode="wait">
+              {activeView === 'guide' && (
+                <motion.div key="guide" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
+                  <GetStartedPanel onNavigate={(v) => setActiveView(v as View)} />
+                </motion.div>
+              )}
               {activeView === 'vault' && (
                 <motion.div key="vault" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
                   <VaultPanel events={events} />

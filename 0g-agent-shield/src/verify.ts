@@ -1,5 +1,5 @@
 /**
- * 0G Agent Shield — Verify CLI
+ * SILO — Verify CLI
  *
  * Usage:
  *   npm run verify -- <rootHash>

@@ -23,7 +23,7 @@ AI agents are accumulating sensitive personal data — medical records, financia
 
 ```bash
 # Clone and install
-git clone https://github.com/0g-silo/silo.git
+git clone https://github.com/rohanpotta/ethdenverhack.git
 cd silo
 
 # Install backend
@@ -54,7 +54,7 @@ Open `http://localhost:5173` to see the SILO dashboard.
 ## Use With Claude Desktop / Cursor
 
 1. Build the project: `cd 0g-agent-shield && npm run build`
-2. Add to your MCP config (`~/.claude/claude_desktop_config.json` or Cursor MCP settings):
+2. Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json` or Cursor MCP settings):
 
 ```json
 {
