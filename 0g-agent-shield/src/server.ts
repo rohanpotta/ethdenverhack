@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { Server as SocketServer } from 'socket.io';
 import { AgentVault } from './lib/vault.js';
 import { SharedMemoryBus } from './lib/shared-memory.js';
+import { MemoryCoordinator } from './lib/memory-coordinator.js';
 import { HeartbeatDaemon } from './lib/heartbeat.js';
 import { AgentRouter } from './lib/agent-router.js';
 import { AutonomyEngine } from './lib/autonomy.js';
@@ -61,7 +62,17 @@ if (!privateKey || !evmRpc || !indexerRpc) {
 }
 
 const vault = new AgentVault({ privateKey, evmRpc, indexerRpc });
+const coordinator = new MemoryCoordinator({
+    onForkDetected: (fork) => {
+        pushEvent('memory_fork', 'api', { channel: fork.channel, branchA: fork.branchA.rootHash, branchB: fork.branchB.rootHash });
+        io.emit('memory:fork', fork);
+    },
+    onHeadUpdated: (receipt) => {
+        io.emit('memory:head_updated', receipt);
+    },
+});
 const sharedMemory = new SharedMemoryBus(vault);
+sharedMemory.attachCoordinator(coordinator);
 const heartbeat = new HeartbeatDaemon(vault, sharedMemory, {
     autonomousMode: process.env.AUTONOMY_MODE === 'true',
     onBeat: (record) => {
@@ -198,9 +209,189 @@ app.post('/api/attest', async (req, res) => {
     }
 });
 
+// =========================================================================
+// SHARED MEMORY ENDPOINTS
+// =========================================================================
+
+app.post('/api/memory/write', async (req, res) => {
+    try {
+        const { channel, data, metadata } = req.body;
+        if (!channel || !data) {
+            return res.status(400).json({ error: 'Missing channel or data' });
+        }
+        const entry = await sharedMemory.write(channel, data, metadata);
+        res.json(entry);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/memory/read/:channel', (req, res) => {
+    const limit = parseInt(req.query.limit as string ?? '50', 10);
+    const entries = sharedMemory.read(req.params.channel, limit);
+    res.json(entries);
+});
+
+app.get('/api/memory/channels', (_req, res) => {
+    res.json(sharedMemory.listChannels());
+});
+
+// =========================================================================
+// AUTONOMY ENDPOINTS
+// =========================================================================
+
+app.get('/api/autonomy/status', (_req, res) => {
+    res.json(autonomyEngine.status());
+});
+
+app.post('/api/autonomy/level', (req, res) => {
+    const { level } = req.body;
+    if (!['off', 'monitor', 'suggest', 'autonomous'].includes(level)) {
+        return res.status(400).json({ error: 'Invalid level' });
+    }
+    autonomyEngine.setLevel(level);
+    if (level !== 'off' && !autonomyEngine.isRunning) {
+        autonomyEngine.start();
+    } else if (level === 'off' && autonomyEngine.isRunning) {
+        autonomyEngine.stop();
+    }
+    pushEvent('autonomy_level_changed', 'api', { level });
+    res.json({ level, running: autonomyEngine.isRunning });
+});
+
+app.get('/api/heartbeat/status', (_req, res) => {
+    res.json(heartbeat.status());
+});
+
+// =========================================================================
+// AGENT ROUTER ENDPOINTS
+// =========================================================================
+
+app.post('/api/agents/spawn', async (req, res) => {
+    try {
+        const { role, context, contextRootHashes, autonomy } = req.body;
+        if (!role) {
+            return res.status(400).json({ error: 'Missing role' });
+        }
+        const descriptor = await agentRouter.spawn({
+            role,
+            contextData: context,
+            contextRootHashes: contextRootHashes ?? [],
+            autonomy: autonomy ?? 'supervised',
+        });
+        res.json(descriptor);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/agents', (_req, res) => {
+    res.json(agentRouter.status());
+});
+
+app.post('/api/agents/:id/message', async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({ error: 'Missing message' });
+        }
+        const entry = await agentRouter.instruct(req.params.id, message);
+        res.json(entry);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// =========================================================================
+// COORDINATION ENDPOINTS
+// =========================================================================
+
+app.post('/api/memory/lock', (req, res) => {
+    const { channel, agentId, ttlMs } = req.body;
+    if (!channel || !agentId) {
+        return res.status(400).json({ error: 'Missing channel or agentId' });
+    }
+    const result = coordinator.acquireLock(channel, agentId, ttlMs);
+    if ('code' in result) {
+        return res.status(409).json(result);
+    }
+    res.json(result);
+});
+
+app.post('/api/memory/unlock', (req, res) => {
+    const { channel, tokenOrAgentId } = req.body;
+    if (!channel || !tokenOrAgentId) {
+        return res.status(400).json({ error: 'Missing channel or tokenOrAgentId' });
+    }
+    const released = coordinator.releaseLock(channel, tokenOrAgentId);
+    res.json({ released });
+});
+
+app.get('/api/memory/head/:channel', (req, res) => {
+    res.json(coordinator.getHead(req.params.channel));
+});
+
+app.post('/api/memory/commit', (req, res) => {
+    const { channel, newRootHash, prevRootHash, expectedVersion, writerId, lockToken } = req.body;
+    if (!channel || !newRootHash || expectedVersion === undefined || !writerId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const result = coordinator.commitWrite(channel, newRootHash, prevRootHash, expectedVersion, writerId, lockToken);
+    if ('code' in result) {
+        return res.status(409).json(result);
+    }
+    res.json(result);
+});
+
+app.get('/api/memory/forks', (req, res) => {
+    const channel = req.query.channel as string | undefined;
+    res.json(coordinator.getForks(channel));
+});
+
+app.get('/api/memory/coordination', (_req, res) => {
+    res.json(coordinator.listChannels());
+});
+
+// =========================================================================
+// MEMORY INDEX ENDPOINTS
+// =========================================================================
+
+app.get('/api/memory/search', (req, res) => {
+    const query = {
+        label: req.query.label as string | undefined,
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+        channel: req.query.channel as string | undefined,
+        contentType: req.query.contentType as any,
+        limit: req.query.limit ? parseInt(req.query.limit as string, 10) : undefined,
+    };
+    res.json(sharedMemory.getIndex().search(query));
+});
+
+app.get('/api/memory/lookup/:rootHash', (req, res) => {
+    const entry = sharedMemory.lookupRootHash(req.params.rootHash);
+    if (!entry) {
+        return res.status(404).json({ error: 'Root hash not found in index' });
+    }
+    res.json(entry);
+});
+
+app.get('/api/memory/index/stats', (_req, res) => {
+    res.json(sharedMemory.getIndex().stats());
+});
+
 // --- Socket.IO connection handler ---
 io.on('connection', (socket) => {
     console.log(`[WS] Client connected: ${socket.id}`);
+
+    socket.on('memory:subscribe', (channel: string) => {
+        socket.join(`memory:${channel}`);
+        console.log(`[WS] ${socket.id} subscribed to memory:${channel}`);
+    });
+
+    socket.on('memory:unsubscribe', (channel: string) => {
+        socket.leave(`memory:${channel}`);
+    });
+
     socket.on('disconnect', () => {
         console.log(`[WS] Client disconnected: ${socket.id}`);
     });
@@ -209,10 +400,18 @@ io.on('connection', (socket) => {
 // --- Launch ---
 const PORT = 3000;
 vault.init().then(() => {
+    if (process.env.AUTONOMY_MODE === 'true') {
+        autonomyEngine.start();
+        console.log(`🤖 Autonomy engine started (level: ${autonomyEngine.level})`);
+    }
+
     httpServer.listen(PORT, () => {
         console.log(`====================================================`);
-        console.log(`🛡️  SILO API running on http://localhost:${PORT}`);
+        console.log(`🛡️  SILO API v2.0 running on http://localhost:${PORT}`);
         console.log(`🔌 WebSocket live feed enabled`);
+        console.log(`🧠 Shared memory bus ready`);
+        console.log(`💓 Heartbeat daemon: ${heartbeat.isRunning ? 'active' : 'standby'}`);
+        console.log(`🤖 Autonomy engine: ${autonomyEngine.level}`);
         console.log(`Agent Address: ${vault.address}`);
         console.log(`====================================================`);
     });

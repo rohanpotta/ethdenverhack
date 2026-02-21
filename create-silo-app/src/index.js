@@ -69,7 +69,7 @@ writeFileSync(join(projectDir, 'package.json'), JSON.stringify({
         doctor: 'npx silo doctor',
     },
     dependencies: {
-        '0g-agent-shield': 'github:rohanpotta/ethdenverhack#main',
+        silo: '^1.0.0',
         dotenv: '^16.4.7',
     },
     devDependencies: {
@@ -124,12 +124,11 @@ build/
 done('.gitignore');
 
 // ── claude-desktop-config.json ──
-const absPath = join(projectDir, 'build/agent.js').replace(/\\/g, '/');
 writeFileSync(join(projectDir, 'claude-desktop-config.json'), JSON.stringify({
     mcpServers: {
         silo: {
-            command: 'node',
-            args: [absPath],
+            command: 'npx',
+            args: ['silo', 'mcp'],
             env: {
                 PRIVATE_KEY: 'your_private_key',
                 EVM_RPC: 'https://evmrpc-testnet.0g.ai',
@@ -152,7 +151,7 @@ writeFileSync(join(projectDir, 'src/agent.ts'), `/**
  *   3. Committing a Merkle attestation of the session
  */
 
-import { AgentVault } from "0g-agent-shield";
+import { AgentVault } from "silo";
 import dotenv from "dotenv";
 
 dotenv.config();

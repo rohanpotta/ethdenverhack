@@ -6,13 +6,17 @@
   "bin": {
     "create-silo-app": "./src/index.js"
   },
+  "files": [
+    "src"
+  ],
   "keywords": [
     "0g",
     "ai-agents",
     "mcp",
     "scaffold",
     "silo",
-    "encrypted-memory"
+    "encrypted-memory",
+    "model-context-protocol"
   ],
   "license": "MIT"
 }

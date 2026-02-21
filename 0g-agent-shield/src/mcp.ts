@@ -35,6 +35,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { AgentVault } from "./lib/vault.js";
 import { SharedMemoryBus } from "./lib/shared-memory.js";
+import { MemoryCoordinator } from "./lib/memory-coordinator.js";
 import { HeartbeatDaemon } from "./lib/heartbeat.js";
 import { AgentRouter } from "./lib/agent-router.js";
 import { AutonomyEngine } from "./lib/autonomy.js";
@@ -69,7 +70,12 @@ const vault = new AgentVault({
   vaultSecret: process.env.VAULT_SECRET,
 });
 
+const coordinator = new MemoryCoordinator({
+  onForkDetected: (fork) => pushToDashboard('memory_fork', fork),
+  onHeadUpdated: (receipt) => pushToDashboard('memory_head_updated', receipt),
+});
 const sharedMemory = new SharedMemoryBus(vault);
+sharedMemory.attachCoordinator(coordinator);
 const heartbeat = new HeartbeatDaemon(vault, sharedMemory, {
   autonomousMode: process.env.AUTONOMY_MODE === "true",
   baseIntervalMs: parseInt(process.env.HEARTBEAT_INTERVAL_MS ?? "30000", 10),
@@ -674,6 +680,165 @@ server.tool(
   }
 );
 
+// =========================================================================
+// MEMORY INDEX + COORDINATION TOOLS
+// =========================================================================
+
+// TOOL 17: Search the memory index
+server.tool(
+  "memory_search",
+  {
+    label: z.string().optional().describe("Search by label (fuzzy match)"),
+    tags: z.string().optional().describe("Comma-separated tags to filter by"),
+    channel: z.string().optional().describe("Filter by channel name"),
+    contentType: z.string().optional().describe("Filter by type: data, shared_memory, attestation_trace, snapshot, agent_descriptor, fix_record, heartbeat"),
+    limit: z.number().optional().describe("Max results (default 20)"),
+  },
+  async ({ label, tags, channel, contentType, limit }) => {
+    try {
+      const index = sharedMemory.getIndex();
+      const results = index.search({
+        label,
+        tags: tags?.split(",").map(t => t.trim()).filter(Boolean),
+        channel,
+        contentType: contentType as any,
+        limit: limit ?? 20,
+      });
+
+      if (results.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: "📭 No entries match your search. Try broader criteria or use memory_index_stats to see what's indexed.",
+          }],
+        };
+      }
+
+      const formatted = results.map((e, i) => [
+        `  ${i + 1}. ${e.label}`,
+        `     Root Hash:  ${e.rootHash.slice(0, 20)}...`,
+        `     Tags:       ${e.tags.join(", ")}`,
+        `     Channel:    ${e.channel ?? "none"}`,
+        `     Type:       ${e.contentType}`,
+        `     Author:     ${e.authorId.slice(0, 10)}...`,
+        `     Created:    ${new Date(e.createdAt).toISOString()}`,
+      ].join("\n")).join("\n\n");
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `🔍 Memory Index — ${results.length} result${results.length !== 1 ? "s" : ""}`,
+            ``,
+            formatted,
+            ``,
+            `Use vault_retrieve with a Root Hash above to decrypt its contents.`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Search failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 18: Look up what a root hash contains
+server.tool(
+  "memory_lookup",
+  {
+    rootHash: z.string().describe("The 0G root hash to look up in the index"),
+  },
+  async ({ rootHash }) => {
+    try {
+      const entry = sharedMemory.lookupRootHash(rootHash);
+      if (!entry) {
+        return {
+          content: [{
+            type: "text",
+            text: `📭 Root hash not found in the index. It may exist on 0G but wasn't stored through SILO's indexed channels.`,
+          }],
+        };
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `📋 Index Entry for ${rootHash.slice(0, 20)}...`,
+            ``,
+            `   Label:        ${entry.label}`,
+            `   Tags:         ${entry.tags.join(", ")}`,
+            `   Channel:      ${entry.channel ?? "none"}`,
+            `   Content Type: ${entry.contentType}`,
+            `   Author:       ${entry.authorId.slice(0, 10)}...`,
+            `   Size:          ${entry.size} bytes`,
+            `   Created:      ${new Date(entry.createdAt).toISOString()}`,
+            `   Content Hash: ${entry.contentHash.slice(0, 16)}...`,
+            entry.description ? `   Description:  ${entry.description}` : "",
+          ].filter(Boolean).join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Lookup failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 19: Memory index stats
+server.tool(
+  "memory_index_stats",
+  {},
+  async () => {
+    try {
+      const index = sharedMemory.getIndex();
+      const stats = index.stats();
+      const allTags = index.allTags();
+      const channels = sharedMemory.listChannels();
+      const coordStatus = coordinator.listChannels();
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            `📊 SILO — Memory Index Stats`,
+            ``,
+            `   Total Indexed:   ${stats.totalEntries}`,
+            `   Unique Tags:     ${stats.uniqueTags}`,
+            `   Channels:        ${stats.uniqueChannels}`,
+            `   Authors:         ${stats.uniqueAuthors}`,
+            ``,
+            `   By Content Type:`,
+            ...Object.entries(stats.byContentType).map(([type, count]) =>
+              `     • ${type}: ${count}`
+            ),
+            ``,
+            `   Tags: ${allTags.slice(0, 20).join(", ")}${allTags.length > 20 ? ` (+${allTags.length - 20} more)` : ""}`,
+            ``,
+            `   Channel Coordination:`,
+            ...coordStatus.map(c =>
+              `     • ${c.head.channel} — v${c.head.version}${c.locked ? ` 🔒 (${c.lockHolder?.slice(0, 8)}...)` : ""}`
+            ),
+            ...(coordStatus.length === 0 ? ["     (no coordinated channels)"] : []),
+            ``,
+            `   Detected Forks: ${coordinator.getForks().filter(f => !f.resolved).length} unresolved`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ Stats failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
 // --- Launch ---
 async function main() {
   await vault.init();
@@ -685,7 +850,7 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("🛡️ SILO MCP server running (v2.0 — shared memory + autonomy)");
+  console.error("🛡️ SILO MCP server running (v2.0 — shared memory + autonomy + coordination)");
 }
 
 main().catch((err) => {

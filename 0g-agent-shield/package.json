@@ -3,6 +3,23 @@
   "version": "1.0.0",
   "description": "Encrypted private memory + execution attestation for AI agents on 0G",
   "type": "module",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "bin": {
+    "silo": "./bin/silo.js"
+  },
+  "files": [
+    "build",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node build/server.js",
@@ -11,7 +28,8 @@
     "doctor": "node build/doctor.js",
     "demo": "node build/demo.js",
     "verify-flow": "node build/verify-flow.js",
-    "test": "tsc && node --test 'build/tests/*.test.js'"
+    "test": "tsc && node --test 'build/tests/*.test.js'",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "0g",
@@ -19,7 +37,9 @@
     "privacy",
     "mcp",
     "openclaw",
-    "attestation"
+    "attestation",
+    "encrypted-memory",
+    "model-context-protocol"
   ],
   "license": "MIT",
   "dependencies": {

@@ -14,20 +14,47 @@ AI agents handle sensitive data — medical records, financial info, personal pr
 
 ## Quick Start
 
+### Option A: Scaffold a new agent (recommended)
+
 ```bash
-# 1. Clone & install
+npx create-silo-app my-agent
+cd my-agent
+# Edit .env: add your 0G wallet private key (64-char hex, no 0x prefix)
+# Get testnet tokens: https://faucet.0g.ai
+npm run build && npm run demo
+```
+
+### Option B: Add to an existing project
+
+```bash
+npm install silo
+```
+
+```typescript
+import { AgentVault } from "silo";
+
+const vault = new AgentVault({
+  privateKey: process.env.PRIVATE_KEY!,
+  evmRpc: process.env.EVM_RPC!,
+  indexerRpc: process.env.INDEXER_RPC!,
+});
+await vault.init();
+
+const { rootHash } = await vault.store("sensitive data", "label");
+const decrypted = await vault.retrieve(rootHash);
+```
+
+### Option C: From source
+
+```bash
 git clone https://github.com/rohanpotta/ethdenverhack.git
 cd ethdenverhack/0g-agent-shield
 npm install
 cp .env.example .env
 # Edit .env: add your 0G wallet private key (64-char hex, no 0x prefix)
-# Get testnet tokens: https://faucet.0g.ai
 
-# 2. Build & validate
 npm run build
 npm run doctor    # Checks: key, RPC, balance, encryption
-
-# 3. Run the full demo
 npm run demo      # Store → Retrieve → Commit attestation
 ```
 
@@ -39,8 +66,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "silo": {
-      "command": "node",
-      "args": ["/absolute/path/to/0g-agent-shield/build/mcp.js"],
+      "command": "npx",
+      "args": ["silo", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_0g_wallet_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -51,7 +78,19 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
+No absolute paths needed — `npx` resolves the package automatically.
+
 Restart Claude Desktop. Your agent now has 8 vault tools: `vault_store`, `vault_retrieve`, `vault_share`, `vault_import`, `session_commit`, `vault_session_log`, `vault_balance`, `vault_status`.
+
+### CLI Tools
+
+```bash
+npx silo mcp           # Start MCP server
+npx silo doctor        # Validate environment
+npx silo demo          # Full demo cycle
+npx silo verify <hash> # Verify stored data
+npx silo start         # API + WebSocket server
+```
 
 ## Multi-Agent Sharing
 

@@ -53,15 +53,14 @@ Open `http://localhost:5173` to see the SILO dashboard.
 
 ## Use With Claude Desktop / Cursor
 
-1. Build the project: `cd 0g-agent-shield && npm run build`
-2. Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json` or Cursor MCP settings):
+Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json` or Cursor MCP settings):
 
 ```json
 {
   "mcpServers": {
     "silo": {
-      "command": "node",
-      "args": ["/absolute/path/to/0g-agent-shield/build/mcp.js"],
+      "command": "npx",
+      "args": ["silo", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -72,9 +71,11 @@ Open `http://localhost:5173` to see the SILO dashboard.
 }
 ```
 
-3. Ask Claude: *"Store my medical diagnosis securely"*
-4. Claude responds with a root hash and attestation event number
-5. Verify: `npm run verify -- <rootHash>`
+No build step or absolute paths needed — `npx` resolves the package from npm.
+
+1. Ask Claude: *"Store my medical diagnosis securely"*
+2. Claude responds with a root hash and attestation event number
+3. Verify: `npx silo verify <rootHash>`
 
 ---
 
@@ -130,8 +131,12 @@ The dashboard connects to the API server via WebSocket for live event streaming.
 
 ## Use As a Library
 
+```bash
+npm install silo
+```
+
 ```typescript
-import { AgentVault } from "0g-agent-shield";
+import { AgentVault } from "silo";
 
 const vault = new AgentVault({
   privateKey: "abc123...",
