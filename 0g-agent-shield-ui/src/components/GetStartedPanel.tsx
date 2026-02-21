@@ -85,101 +85,36 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                 </ul>
             </div>
 
-            {/* Hackathon Demo Flow */}
+            {/* Universal 4-Step Setup */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps">For the Hackathon Demo</span>
+                    <span className="label-caps">Universal Setup Guide (For Humans & AI Agents)</span>
                 </div>
-                <div className="space-y-4">
-                    <StepCard step={1} title="Start the Services">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 1: Backend</div>
-                                <CopyBlock code={`cd 0g-agent-shield
-npm run build
-npm run doctor
-npm start`} />
-                            </div>
-                            <div>
-                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 2: Dashboard</div>
-                                <CopyBlock code={`cd 0g-agent-shield-ui
-npm run dev`} />
-                            </div>
-                        </div>
-                    </StepCard>
+                <p className="text-sm text-text-muted mb-6 leading-relaxed">
+                    Follow these four steps to start your decentralized AI agent node, enable the MCP server for Claude/Cursor, and connect to the live dashboard.
+                </p>
 
-                    <StepCard step={2} title="(Optional) Ngrok tunnel for Vercel">
+                <div className="space-y-4">
+                    {/* STEP 1: DOWNLOAD */}
+                    <StepCard step={1} title="Download & Configure">
                         <p className="text-xs text-text-muted mb-3 leading-relaxed">
-                            Run this to make your local backend accessible to the world:
+                            Scaffold a fresh SILO agent project. This downloads the <code className="text-primary bg-primary/10 px-1 rounded">silo-agent</code> npm package.
                         </p>
-                        <CopyBlock code={`ngrok http 3000`} />
-                        <p className="text-xs text-text-muted mt-3 leading-relaxed">
-                            Copy the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL.
-                            If you deploy the dashboard to Vercel, paste this URL into the <strong className="text-text-primary">Live/Offline</strong> indicator
-                            in the top-right corner to connect.
-                        </p>
-                    </StepCard>
-
-                    <StepCard step={3} title="Run the Demo">
-                        <ul className="text-xs text-text-muted space-y-2 leading-relaxed list-disc list-inside marker:text-primary">
-                            <li>Open <code className="text-primary bg-primary/10 px-1 rounded">http://localhost:5173</code> (or Vercel URL with tunnel)</li>
-                            <li><strong>GUIDE</strong> tab walks you through everything</li>
-                            <li>Go to <strong>VAULT</strong> tab → type sensitive data → click "Encrypt & Store on 0G"</li>
-                            <li>Watch <strong className="text-text-primary">HexCascade</strong> animation as data encrypts</li>
-                            <li>Copy the root hash → switch to <strong className="text-text-primary">Retrieve</strong> tab → paste → click Decrypt</li>
-                            <li>Click <strong className="text-text-primary">ATT</strong> button in sidebar → triggers CommitCeremony animation</li>
-                            <li><strong>MERKLE</strong> tab shows live D3 tree visualization</li>
-                            <li><strong>AGENTS</strong> tab shows sub-agent spawning</li>
-                            <li><strong>LOG</strong> tab shows full real-time event stream</li>
-                        </ul>
-                    </StepCard>
-                </div>
-            </div>
-
-            {/* Step-by-step for Devs */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps mt-8">For Real Developers Using Your Tool</span>
-                </div>
-
-                <div className="space-y-4">
-                    <StepCard step={1} title="Option A — Scaffold a new project (recommended)">
                         <CopyBlock code={`npx create-silo-app my-agent
-cd my-agent
-# Edit .env with your 0G private key
-npm run build && npm run doctor && npm run demo`} />
+cd my-agent`} />
                         <p className="text-xs text-text-muted mt-3 leading-relaxed">
-                            Need a wallet? Export from MetaMask, or generate one: <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>.
-                            Fund it with testnet tokens at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
+                            Edit the generated <code className="text-primary bg-primary/10 px-1 rounded">.env</code> file
+                            and add your 0G/EVM testnet private key (64-char hex, no 0x prefix).
+                            Need a wallet? Export from MetaMask or run <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>
+                            and fund it at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
                     </StepCard>
 
-                    <StepCard step={2} title="Option B — Add to existing project">
-                        <CopyBlock code={`npm install silo-agent`} />
-                        <div className="mt-3">
-                            <CopyBlock lang="typescript" code={`import { AgentVault } from "silo-agent";
-
-const vault = new AgentVault({
-  privateKey: process.env.PRIVATE_KEY!,
-  evmRpc: "https://evmrpc-testnet.0g.ai",
-  indexerRpc: "https://indexer-storage-testnet-turbo.0g.ai",
-});
-await vault.init();
-
-// Store encrypted memory
-const { rootHash } = await vault.store("sensitive patient data");
-
-// Retrieve and decrypt
-const decrypted = await vault.retrieve(rootHash);
-
-// Commit attestation (Merkle proof of all actions)
-const { merkleRoot } = await vault.commitSession();`} />
-                        </div>
-                    </StepCard>
-
-                    <StepCard step={3} title="Option C — MCP Server (Claude Desktop / Cursor)">
+                    {/* STEP 2: MCP */}
+                    <StepCard step={2} title="Start Context Server (MCP Integration)">
                         <p className="text-xs text-text-muted mb-3">
-                            Add this to your Claude Desktop config (<code className="text-primary bg-primary/10 px-1 rounded">~/Library/Application Support/Claude/claude_desktop_config.json</code>) or Cursor MCP settings:
+                            Give Claude Desktop or Cursor direct access to the AgentVault by putting this in your
+                            <code className="text-primary bg-primary/10 px-1 rounded">claude_desktop_config.json</code>:
                         </p>
                         <CopyBlock lang="json" code={`{
   "mcpServers": {
@@ -187,7 +122,7 @@ const { merkleRoot } = await vault.commitSession();`} />
       "command": "npx",
       "args": ["silo-agent", "mcp"],
       "env": {
-        "PRIVATE_KEY": "your_64_char_hex_key",
+        "PRIVATE_KEY": "your_64_char_hex_key_here",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
         "INDEXER_RPC": "https://indexer-storage-testnet-turbo.0g.ai"
       }
@@ -195,98 +130,47 @@ const { merkleRoot } = await vault.commitSession();`} />
   }
 }`} />
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
-                            No absolute paths needed — <code className="text-primary bg-primary/10 px-1 rounded">npx</code> resolves the package from npm automatically.
+                            This gives your AI 17 powerful tools out-of-the-box (like <code className="text-text-primary">vault_store</code>, <code className="text-text-primary">session_commit</code>, etc.).
                         </p>
                     </StepCard>
-                </div>
-            </div>
 
-            {/* MCP Tools Reference */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps">8 MCP Tools Available</span>
-                </div>
-                <div className="glass-panel rounded-lg overflow-hidden">
-                    <table className="w-full text-xs">
-                        <thead>
-                            <tr className="border-b border-border">
-                                <th className="text-left px-4 py-2 label-caps">Tool</th>
-                                <th className="text-left px-4 py-2 label-caps">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody className="font-mono">
-                            {[
-                                ['vault_store', 'Encrypt data and upload to 0G Storage'],
-                                ['vault_retrieve', 'Download from 0G and decrypt'],
-                                ['vault_session_log', 'View the current attestation session'],
-                                ['session_commit', 'Finalize session with Merkle root'],
-                                ['vault_balance', 'Check wallet balance'],
-                                ['vault_status', 'Show agent address, session, network'],
-                                ['vault_share', 'Store and generate a share descriptor'],
-                                ['vault_import', 'Import shared memory from another agent'],
-                            ].map(([tool, desc]) => (
-                                <tr key={tool} className="border-b border-border/50 hover:bg-base-elevated/30 transition-colors">
-                                    <td className="px-4 py-2 text-primary">{tool}</td>
-                                    <td className="px-4 py-2 text-text-muted font-sans">{desc}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Multi-agent sharing */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps">Multi-Agent Sharing</span>
-                </div>
-                <div className="glass-panel rounded-lg p-5">
-                    <p className="text-sm text-text-muted mb-4 leading-relaxed">
-                        Agents sharing the same <code className="text-primary bg-primary/10 px-1 rounded text-xs">VAULT_SECRET</code> can
-                        pass encrypted memories to each other. Agent A stores data and generates a share descriptor.
-                        Agent B imports it using the root hash and both actions are attested in their respective Merkle trees.
-                    </p>
-                    <div className="glass-panel rounded p-4 font-mono text-xs text-text-muted space-y-1">
-                        <div><span className="text-accent-store">Agent A:</span> vault_share("patient vitals: HR 72, BP 120/80")</div>
-                        <div className="text-text-muted/40 pl-8">{"→"} rootHash: 0xabc123...</div>
-                        <div className="text-text-muted/40 pl-8">{"→"} share descriptor sent to Agent B</div>
-                        <div className="mt-2"><span className="text-accent-retrieve">Agent B:</span> vault_import("0xabc123...")</div>
-                        <div className="text-text-muted/40 pl-8">{"→"} decrypted: "patient vitals: HR 72, BP 120/80"</div>
-                        <div className="text-text-muted/40 pl-8">{"→"} both actions recorded in attestation</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Dashboard */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="label-caps">Start the Dashboard</span>
-                </div>
-                <div className="glass-panel rounded-lg p-5">
-                    <p className="text-sm text-text-muted mb-3 leading-relaxed">
-                        The dashboard connects to the API server via WebSocket and shows every vault operation in real-time.
-                        Run both the backend and frontend:
-                    </p>
-                    <CopyBlock code={`# Terminal 1: API server
-cd 0g-agent-shield && npm start
-
-# Terminal 2: Dashboard
-cd 0g-agent-shield-ui && npm run dev`} />
-
-                    <div className="mt-6 pt-5 border-t border-border/50">
-                        <h4 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-pulse" />
-                            Using the Hosted Dashboard?
-                        </h4>
+                    {/* STEP 3: NODE & TUNNEL */}
+                    <StepCard step={3} title="Start Node & Ngrok Tunnel">
                         <p className="text-xs text-text-muted mb-3 leading-relaxed">
-                            If you're viewing this on Vercel instead of localhost, the dashboard can't reach your local background server directly.
-                            You need to expose it using <code className="text-primary bg-primary/10 px-1 rounded">ngrok</code>:
+                            Open two terminals inside your <code className="text-primary bg-primary/10 px-1 rounded">my-agent</code> folder.
                         </p>
-                        <CopyBlock code={`ngrok http 3000`} />
-                        <p className="text-xs text-text-muted mt-3 leading-relaxed">
-                            Copy the generated `https://` ngrok URL, click on the <strong className="text-text-primary">Offline / URL</strong> indicator in the top right of this dashboard, paste the URL, and press Enter to connect.
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 1: Node & API Server</div>
+                                <CopyBlock code={`npm run build
+npm run doctor
+npm start`} />
+                                <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
+                                    <code className="text-primary px-1">doctor</code> checks your keys/balance. <code className="text-primary px-1">start</code> boots the API on port 3000.
+                                </p>
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-text-muted mb-1 font-mono uppercase tracking-wider">Terminal 2: Ngrok Tunnel</div>
+                                <CopyBlock code={`ngrok http 3000`} />
+                                <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
+                                    Copy the <code className="text-primary px-1">https://xxx.ngrok-free.app</code> URL. This securely exposes your local node to the internet.
+                                </p>
+                            </div>
+                        </div>
+                    </StepCard>
+
+                    {/* STEP 4: DASHBOARD */}
+                    <StepCard step={4} title="Connect the Universal Dashboard">
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            Because you are running the backend locally via ngrok, you can use the hosted web dashboard without downloading frontend code.
                         </p>
-                    </div>
+                        <ul className="text-xs text-text-muted space-y-2 leading-relaxed list-decimal list-inside marker:text-primary mb-4">
+                            <li>Open the Vercel dashboard link (the site you are on right now).</li>
+                            <li>Look at the top right of the navigation bar. Click the <strong className="text-text-primary">Offline / URL</strong> indicator.</li>
+                            <li>Paste the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL you copied in Step 3.</li>
+                            <li>Press <strong className="text-text-primary">Enter</strong> to connect. The dashboard will instantly sync with your local node.</li>
+                        </ul>
+                    </StepCard>
                 </div>
             </div>
 
