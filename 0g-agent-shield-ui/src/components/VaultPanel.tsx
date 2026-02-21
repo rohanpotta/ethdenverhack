@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HexCascade } from './effects/HexCascade';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 interface VaultEvent {
     id: number;
     type: 'store' | 'retrieve' | 'session_commit';
@@ -14,7 +12,7 @@ interface VaultEvent {
 
 type Tab = 'store' | 'retrieve';
 
-export function VaultPanel({ events }: { events: VaultEvent[] }) {
+export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: string }) {
     const [activeTab, setActiveTab] = useState<Tab>('store');
     const [payload, setPayload] = useState('');
     const [rootHashInput, setRootHashInput] = useState('');
@@ -33,7 +31,7 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
         setResult(null);
 
         try {
-            const res = await fetch(`${API_URL}/api/store`, {
+            const res = await fetch(`${apiUrl}/api/store`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: payload }),
@@ -63,7 +61,7 @@ export function VaultPanel({ events }: { events: VaultEvent[] }) {
         setDecryptedData('');
 
         try {
-            const res = await fetch(`${API_URL}/api/retrieve`, {
+            const res = await fetch(`${apiUrl}/api/retrieve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rootHash: rootHashInput }),
