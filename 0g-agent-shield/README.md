@@ -13,9 +13,10 @@ AI agents are accumulating sensitive personal data — medical records, financia
 | **Encrypted Vault** | AES-256-GCM encryption with PBKDF2 key derivation. Data is encrypted in-memory and stored on 0G — never at rest in plaintext. |
 | **Execution Attestation** | Every store/retrieve is hashed into a Merkle tree. Commit a session to publish a verifiable proof of agent behavior without revealing content. |
 | **Multi-Agent Sharing** | Agents can securely share encrypted memories via `vault_share` and `vault_import` — enabling cross-agent collaboration with cryptographic accountability. |
-| **MCP Server** | 8 tools for Claude Desktop, Cursor, or any MCP-compatible client. |
+| **MCP Server** | 21 tools for Claude Desktop, Cursor, or any MCP-compatible client (vault + DeFAI + shared memory + autonomy). |
 | **Real-Time Dashboard** | Live WebSocket-powered UI showing stores, retrieves, Merkle tree visualization, and session attestation ceremonies. |
 | **CLI Tools** | `verify` to prove data exists, `doctor` to validate setup, `demo` to run the full cycle. |
+| **DeFAI Copilot** | Intent-to-plan API with guardrails, risk previews, explicit user approval, and optional 0G Compute rationale. |
 
 ---
 
@@ -24,7 +25,7 @@ AI agents are accumulating sensitive personal data — medical records, financia
 ```bash
 # Clone and install
 git clone https://github.com/rohanpotta/ethdenverhack.git
-cd silo
+cd ethdenverhack
 
 # Install backend
 cd 0g-agent-shield
@@ -79,7 +80,9 @@ No build step or absolute paths needed — `npx` resolves the package from npm.
 
 ---
 
-## MCP Tools (8)
+## MCP Tools
+
+SILO exposes 21 MCP tools. Core vault tools:
 
 | Tool | Description |
 |---|---|
@@ -91,6 +94,13 @@ No build step or absolute paths needed — `npx` resolves the package from npm.
 | `vault_status` | Show agent address, session ID, network |
 | `vault_share` | Encrypt, store, and generate a share descriptor for another agent |
 | `vault_import` | Retrieve and decrypt shared memory from another agent's descriptor |
+
+DeFAI tools:
+
+| Tool | Description |
+|---|---|
+| `defai_plan` | Generate a structured DeFi plan with guardrails + risk preview |
+| `defai_approve` | Explicit user approval/rejection gate before execution |
 
 ---
 
@@ -233,6 +243,9 @@ npm run doctor
 # Run the full demo cycle
 npm run demo
 
+# Run the DeFAI safe-execution demo
+npm run defai:demo
+
 # Verify a specific stored memory
 npm run verify -- <rootHash>
 
@@ -242,6 +255,22 @@ npm run verify -- <traceRootHash> --trace
 # Check 0G Flow contract state
 npm run verify-flow
 ```
+
+## DeFAI Endpoints
+
+```bash
+POST /api/defai/plan
+POST /api/defai/approve
+```
+
+`/api/defai/plan` creates a structured swap plan with guardrails and simulation preview.  
+`/api/defai/approve` enforces explicit user control by requiring an approval/rejection action.
+
+Set `OG_COMPUTE_URL` to route planning rationale through 0G Compute. If unavailable, SILO falls back to deterministic heuristics.
+
+If you use the 0G starter-kit query API (`/api/services/query`), also set:
+- `OG_COMPUTE_PROVIDER_ADDRESS`
+- `OG_COMPUTE_FALLBACK_FEE` (default `0.01`)
 
 ---
 

@@ -9,7 +9,9 @@
       "env": {
         "PRIVATE_KEY": "your_private_key",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
-        "INDEXER_RPC": "https://indexer-storage-testnet-turbo.0g.ai"
+        "INDEXER_RPC": "https://indexer-storage-testnet-turbo.0g.ai",
+        "OG_COMPUTE_URL": "https://your-0g-compute-endpoint",
+        "OG_COMPUTE_MODEL": "qwen-2.5-7b-instruct"
       }
     }
   }

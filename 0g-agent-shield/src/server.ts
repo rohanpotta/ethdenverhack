@@ -8,6 +8,7 @@ import { MemoryCoordinator } from './lib/memory-coordinator.js';
 import { HeartbeatDaemon } from './lib/heartbeat.js';
 import { AgentRouter } from './lib/agent-router.js';
 import { AutonomyEngine } from './lib/autonomy.js';
+import { buildStructuredPlan, guardrailViolations, type Guardrails, type PlanInput, type StructuredPlan } from './lib/defai.js';
 import dotenv from 'dotenv';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +37,7 @@ interface VaultEvent {
 }
 const eventLog: VaultEvent[] = [];
 let eventCounter = 0;
+const planStore = new Map<string, StructuredPlan>();
 
 function pushEvent(type: VaultEvent['type'], source: VaultEvent['source'], data: Record<string, any>) {
     const event: VaultEvent = {
@@ -142,6 +144,134 @@ app.post('/api/push-event', (req, res) => {
     }
     pushEvent(type, 'mcp', data);
     res.json({ ok: true });
+});
+
+// =========================================================================
+// DEFAI COPILOT ENDPOINTS
+// =========================================================================
+
+app.post('/api/defai/plan', async (req, res) => {
+    try {
+        const {
+            intent,
+            tokenIn = 'ETH',
+            tokenOut = 'USDC',
+            amountUsd = 500,
+            guardrails,
+        } = req.body as {
+            intent?: string;
+            tokenIn?: string;
+            tokenOut?: string;
+            amountUsd?: number;
+            guardrails?: Partial<Guardrails>;
+        };
+
+        if (!intent || !intent.trim()) {
+            return res.status(400).json({ error: 'Missing intent' });
+        }
+
+        const normalizedGuardrails: Guardrails = {
+            maxSlippageBps: guardrails?.maxSlippageBps ?? 75,
+            timeoutSec: guardrails?.timeoutSec ?? 90,
+            tokenAllowlist: guardrails?.tokenAllowlist ?? ['ETH', 'USDC', 'DAI', 'WBTC'],
+            maxNotionalUsd: guardrails?.maxNotionalUsd ?? 1000,
+        };
+
+        const input: PlanInput = {
+            intent: intent.trim(),
+            tokenIn: tokenIn.toUpperCase(),
+            tokenOut: tokenOut.toUpperCase(),
+            amountUsd: Number(amountUsd),
+            guardrails: normalizedGuardrails,
+        };
+
+        const violations = guardrailViolations(input);
+        if (violations.length > 0) {
+            pushEvent('defai_blocked', 'api', { intent: input.intent, violations });
+            return res.status(400).json({
+                error: 'Guardrail violation',
+                violations,
+            });
+        }
+
+        const plan = await buildStructuredPlan(input);
+        planStore.set(plan.planId, plan);
+
+        // Store encrypted artifacts on 0G so the decision process is auditable.
+        const planStoreResult = await vault.store(
+            JSON.stringify(plan, null, 2),
+            'defai_plan'
+        );
+
+        pushEvent('defai_plan', 'api', {
+            planId: plan.planId,
+            tokenIn: input.tokenIn,
+            tokenOut: input.tokenOut,
+            amountUsd: input.amountUsd,
+            riskLevel: plan.risk.level,
+            rootHash: planStoreResult.rootHash,
+            computeProvider: plan.compute.provider,
+            computeUsed: plan.compute.used,
+        });
+
+        res.json({
+            plan,
+            artifact: {
+                rootHash: planStoreResult.rootHash,
+                txHash: planStoreResult.txHash,
+            },
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/defai/approve', async (req, res) => {
+    try {
+        const { planId, approved, reason } = req.body as { planId?: string; approved?: boolean; reason?: string };
+        if (!planId) {
+            return res.status(400).json({ error: 'Missing planId' });
+        }
+
+        const plan = planStore.get(planId);
+        if (!plan) {
+            return res.status(404).json({ error: 'Plan not found or expired' });
+        }
+
+        const approval = {
+            planId,
+            approved: Boolean(approved),
+            reason: reason ?? null,
+            timestamp: Date.now(),
+            action: approved
+                ? 'Ready for wallet signature + transaction broadcast'
+                : 'Execution halted by user decision',
+        };
+
+        const approvalStore = await vault.store(
+            JSON.stringify(approval, null, 2),
+            approved ? 'defai_user_approved' : 'defai_user_rejected'
+        );
+
+        pushEvent(approved ? 'defai_approved' : 'defai_rejected', 'api', {
+            planId,
+            approved: Boolean(approved),
+            rootHash: approvalStore.rootHash,
+        });
+
+        res.json({
+            planId,
+            approved: Boolean(approved),
+            userControl: 'User confirmation required before any transaction execution.',
+            nextAction: approval.action,
+            artifact: {
+                rootHash: approvalStore.rootHash,
+                txHash: approvalStore.txHash,
+            },
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.post('/api/store', async (req, res) => {

@@ -27,6 +27,7 @@
     "verify": "node build/verify.js",
     "doctor": "node build/doctor.js",
     "demo": "node build/demo.js",
+    "defai:demo": "node build/defai-demo.js",
     "verify-flow": "node build/verify-flow.js",
     "test": "tsc && node --test 'build/tests/*.test.js'",
     "prepublishOnly": "npm run build"
@@ -47,7 +48,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "cors": "^2.8.6",
     "dotenv": "^16.4.7",
-    "ethers": "^6.13.5",
+    "ethers": "6.13.1",
     "express": "^5.2.1",
     "socket.io": "^4.8.3",
     "zod": "^3.24.2"

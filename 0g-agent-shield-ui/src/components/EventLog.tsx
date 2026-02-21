@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 import type { VaultEvent } from '../App';
 
-const TYPE_CONFIG: Record<VaultEvent['type'], { color: string; bg: string; border: string; label: string }> = {
+const TYPE_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
     store: { color: 'text-accent-store', bg: 'bg-accent-store/10', border: 'border-accent-store/20', label: 'STORE' },
     retrieve: { color: 'text-accent-retrieve', bg: 'bg-accent-retrieve/10', border: 'border-accent-retrieve/20', label: 'RTRVE' },
     session_commit: { color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', label: 'CMMIT' },
@@ -13,6 +13,10 @@ const TYPE_CONFIG: Record<VaultEvent['type'], { color: string; bg: string; borde
     shared_memory: { color: 'text-accent-warn', bg: 'bg-accent-warn/10', border: 'border-accent-warn/20', label: 'MEM_S' },
     memory_fork: { color: 'text-accent-danger', bg: 'bg-accent-danger/10', border: 'border-accent-danger/20', label: 'FORK' },
     memory_head_updated: { color: 'text-accent-warn', bg: 'bg-accent-warn/10', border: 'border-accent-warn/20', label: 'HEAD' },
+    defai_plan: { color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', label: 'DPLAN' },
+    defai_approved: { color: 'text-accent-store', bg: 'bg-accent-store/10', border: 'border-accent-store/20', label: 'DAPRV' },
+    defai_rejected: { color: 'text-accent-danger', bg: 'bg-accent-danger/10', border: 'border-accent-danger/20', label: 'DREJ' },
+    defai_blocked: { color: 'text-accent-danger', bg: 'bg-accent-danger/10', border: 'border-accent-danger/20', label: 'DBLK' },
 };
 
 export function EventLog({ events }: { events: VaultEvent[] }) {

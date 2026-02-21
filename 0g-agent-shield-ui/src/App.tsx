@@ -11,15 +11,16 @@ import { GetStartedPanel } from './components/GetStartedPanel';
 import { CommitCeremony } from './components/CommitCeremony';
 import { AutonomyDashboard } from './components/AutonomyDashboard';
 import { SharedMemoryPanel } from './components/SharedMemoryPanel';
+import { DefaiPanel } from './components/DefaiPanel';
 import { io, Socket } from 'socket.io-client';
 
-type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk' | 'guide' | 'autonomy' | 'memory';
+type View = 'vault' | 'agents' | 'merkle' | 'log' | 'sdk' | 'guide' | 'autonomy' | 'memory' | 'defai';
 
 export interface VaultEvent {
   id: number;
-  type: 'store' | 'retrieve' | 'session_commit' | 'agent_spawned' | 'agent_message' | 'autonomy_level_changed' | 'memory_write' | 'shared_memory' | 'memory_fork' | 'memory_head_updated';
+  type: string;
   timestamp: number;
-  source: 'api' | 'mcp';
+  source: string;
   data: Record<string, any>;
 }
 
@@ -27,6 +28,7 @@ const DEFAULT_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const NAV_ITEMS: { id: View; label: string }[] = [
   { id: 'guide', label: 'GUIDE' },
+  { id: 'defai', label: 'DEFAI' },
   { id: 'vault', label: 'VAULT' },
   { id: 'memory', label: 'MEMORY' },
   { id: 'agents', label: 'AGENTS' },
@@ -96,12 +98,13 @@ function App() {
     s.on('vault:event', (event: VaultEvent) => {
       setEvents(prev => [event, ...prev].slice(0, 50));
       if (event.type === 'session_commit') {
+        const data = event.data as Record<string, unknown>;
         setCommitData({
-          merkleRoot: event.data?.merkleRoot || '0x000...0000',
-          sessionId: event.data?.sessionId || '',
-          eventCount: event.data?.eventCount || 0,
-          traceRootHash: event.data?.traceRootHash || '',
-          traceTxHash: event.data?.traceTxHash || '',
+          merkleRoot: data?.merkleRoot as string || '0x000...0000',
+          sessionId: data?.sessionId as string || '',
+          eventCount: data?.eventCount as number || 0,
+          traceRootHash: data?.traceRootHash as string || '',
+          traceTxHash: data?.traceTxHash as string || '',
         });
       }
     });
@@ -120,10 +123,10 @@ function App() {
   useEffect(() => {
     const stores = events.filter(e => e.type === 'store').length;
     const retrieves = events.filter(e => e.type === 'retrieve').length;
-    const bytes = events.reduce((sum, e) => sum + (e.data?.size || 0), 0);
+    const bytes = events.reduce((sum, e) => sum + ((e.data as Record<string, unknown>)?.size as number || 0), 0);
     const commits = events.filter(e => e.type === 'session_commit');
     const avgCommitMs = commits.length > 0
-      ? Math.round(commits.reduce((s, c) => s + (c.data?.durationMs || 340), 0) / commits.length)
+      ? Math.round(commits.reduce((s, c) => s + ((c.data as Record<string, unknown>)?.durationMs as number || 340), 0) / commits.length)
       : 0;
     setStats({ stores, retrieves, bytes, avgCommitMs });
   }, [events]);
@@ -338,6 +341,11 @@ function App() {
                   <VaultPanel apiUrl={apiUrl} events={events} />
                 </motion.div>
               )}
+              {activeView === 'defai' && (
+                <motion.div key="defai" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
+                  <DefaiPanel apiUrl={apiUrl} />
+                </motion.div>
+              )}
               {activeView === 'merkle' && (
                 <motion.div key="merkle" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="h-full">
                   <div className="max-w-5xl mx-auto">
@@ -386,7 +394,7 @@ function App() {
                 <div className="flex items-center gap-4 animate-fade-in">
                   <span className="label-caps text-accent-store">[{events[0].type}]</span>
                   <span className="mono-hash text-text-muted truncate">
-                    {events[0].data?.rootHash || events[0].data?.merkleRoot || '-'}
+                    {(events[0].data as Record<string, unknown>)?.rootHash as string || (events[0].data as Record<string, unknown>)?.merkleRoot as string || '-'}
                   </span>
                   <span className="text-[10px] text-text-muted ml-auto flex-shrink-0">
                     {new Date(events[0].timestamp).toLocaleTimeString()}

@@ -16,6 +16,8 @@
  *   vault_status         — Show vault status and session info
  *   vault_share          — Store + generate share descriptor for another agent
  *   vault_import         — Retrieve shared memory from another agent
+ *   defai_plan           — Intent -> structured DeFi plan with guardrails
+ *   defai_approve        — Explicit approval/rejection gate for a plan
  *
  * Tools (Shared Memory):
  *   memory_write         — Write data to a named shared memory channel
@@ -39,9 +41,22 @@ import { MemoryCoordinator } from "./lib/memory-coordinator.js";
 import { HeartbeatDaemon } from "./lib/heartbeat.js";
 import { AgentRouter } from "./lib/agent-router.js";
 import { AutonomyEngine } from "./lib/autonomy.js";
+import { buildStructuredPlan, guardrailViolations, type Guardrails, type PlanInput, type StructuredPlan } from "./lib/defai.js";
 import dotenv from "dotenv";
+import util from "node:util";
 
 dotenv.config();
+
+// MCP stdio transport requires stdout to contain protocol frames only.
+// Some SDK dependencies print verbose diagnostics via console.log/info/warn.
+// Redirect non-error console output to stderr to avoid JSON parse noise in Claude Desktop.
+const writeStderr = (...args: any[]) => {
+  process.stderr.write(`${util.format(...args)}\n`);
+};
+console.log = writeStderr;
+console.info = writeStderr;
+console.warn = writeStderr;
+console.debug = writeStderr;
 
 // --- Dashboard bridge (fire-and-forget) ---
 const DASHBOARD_API = process.env.DASHBOARD_API || 'http://localhost:3000';
@@ -102,6 +117,7 @@ const server = new McpServer({
   name: "silo",
   version: "2.0.0",
 });
+const defaiPlans = new Map<string, StructuredPlan>();
 
 // TOOL 1: Store encrypted memory
 server.tool(
@@ -339,11 +355,165 @@ server.tool(
   }
 );
 
+// TOOL 9: DeFAI plan — Intent to structured plan with guardrails + optional 0G Compute rationale
+server.tool(
+  "defai_plan",
+  {
+    intent: z.string().describe("User intent, e.g. rebalance 500 USD from ETH to USDC"),
+    tokenIn: z.string().optional().describe("Input token symbol (default ETH)"),
+    tokenOut: z.string().optional().describe("Output token symbol (default USDC)"),
+    amountUsd: z.number().optional().describe("Notional amount in USD (default 500)"),
+    maxSlippageBps: z.number().optional().describe("Max slippage in bps (default 75)"),
+    timeoutSec: z.number().optional().describe("Execution timeout in seconds (default 90)"),
+    maxNotionalUsd: z.number().optional().describe("Notional cap in USD (default 1000)"),
+    tokenAllowlist: z.string().optional().describe("Comma-separated allowed tokens (default ETH,USDC,DAI,WBTC)"),
+  },
+  async ({ intent, tokenIn, tokenOut, amountUsd, maxSlippageBps, timeoutSec, maxNotionalUsd, tokenAllowlist }) => {
+    try {
+      const guardrails: Guardrails = {
+        maxSlippageBps: maxSlippageBps ?? 75,
+        timeoutSec: timeoutSec ?? 90,
+        maxNotionalUsd: maxNotionalUsd ?? 1000,
+        tokenAllowlist: tokenAllowlist
+          ? tokenAllowlist.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean)
+          : ["ETH", "USDC", "DAI", "WBTC"],
+      };
+
+      const input: PlanInput = {
+        intent,
+        tokenIn: (tokenIn ?? "ETH").toUpperCase(),
+        tokenOut: (tokenOut ?? "USDC").toUpperCase(),
+        amountUsd: amountUsd ?? 500,
+        guardrails,
+      };
+
+      const violations = guardrailViolations(input);
+      if (violations.length > 0) {
+        pushToDashboard("defai_blocked", { intent: input.intent, violations });
+        return {
+          content: [{
+            type: "text",
+            text: [
+              "❌ Guardrail violation.",
+              ...violations.map(v => `   - ${v}`),
+            ].join("\n"),
+          }],
+          isError: true,
+        };
+      }
+
+      const plan = await buildStructuredPlan(input);
+      defaiPlans.set(plan.planId, plan);
+
+      const stored = await vault.store(JSON.stringify(plan, null, 2), "defai_plan");
+      pushToDashboard("defai_plan", {
+        planId: plan.planId,
+        tokenIn: plan.input.tokenIn,
+        tokenOut: plan.input.tokenOut,
+        amountUsd: plan.input.amountUsd,
+        riskLevel: plan.risk.level,
+        rootHash: stored.rootHash,
+        computeProvider: plan.compute.provider,
+        computeUsed: plan.compute.used,
+      });
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            "🧠 DeFAI plan created.",
+            `   Plan ID:      ${plan.planId}`,
+            `   Intent:       ${plan.input.intent}`,
+            `   Pair:         ${plan.input.tokenIn} -> ${plan.input.tokenOut}`,
+            `   Amount:       $${plan.input.amountUsd}`,
+            `   Risk:         ${plan.risk.level.toUpperCase()}`,
+            `   Sim Impact:   ${plan.preview.simulatedPriceImpactBps} bps`,
+            `   Expected Out: $${plan.preview.expectedOutUsd}`,
+            `   Min Out:      $${plan.preview.minOutUsd}`,
+            `   Compute:      ${plan.compute.provider} (${plan.compute.used ? "used" : "fallback"})`,
+            `   Artifact:     ${stored.rootHash}`,
+            "",
+            "Why:",
+            `   ${plan.compute.rationale}`,
+            "",
+            "Next: call defai_approve with this planId.",
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ DeFAI plan failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// TOOL 10: DeFAI approval — explicit user control gate
+server.tool(
+  "defai_approve",
+  {
+    planId: z.string().describe("Plan ID returned by defai_plan"),
+    approved: z.boolean().describe("Whether user approved execution"),
+    reason: z.string().optional().describe("Optional human reason"),
+  },
+  async ({ planId, approved, reason }) => {
+    try {
+      const plan = defaiPlans.get(planId);
+      if (!plan) {
+        return {
+          content: [{ type: "text", text: `❌ Plan not found: ${planId}` }],
+          isError: true,
+        };
+      }
+
+      const approval = {
+        planId,
+        approved,
+        reason: reason ?? null,
+        timestamp: Date.now(),
+        action: approved
+          ? "Ready for wallet signature + tx broadcast"
+          : "Execution halted by user decision",
+      };
+
+      const stored = await vault.store(
+        JSON.stringify(approval, null, 2),
+        approved ? "defai_user_approved" : "defai_user_rejected"
+      );
+
+      pushToDashboard(approved ? "defai_approved" : "defai_rejected", {
+        planId,
+        approved,
+        rootHash: stored.rootHash,
+      });
+
+      return {
+        content: [{
+          type: "text",
+          text: [
+            approved ? "✅ Plan approved." : "🛑 Plan rejected.",
+            `   Plan ID:  ${planId}`,
+            `   Artifact: ${stored.rootHash}`,
+            `   Control:  User approval required before execution`,
+            `   Next:     ${approval.action}`,
+          ].join("\n"),
+        }],
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `❌ DeFAI approval failed: ${err.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
 // =========================================================================
 // SHARED MEMORY TOOLS
 // =========================================================================
 
-// TOOL 9: Write to shared memory channel
+// TOOL 11: Write to shared memory channel
 server.tool(
   "memory_write",
   {
@@ -378,7 +548,7 @@ server.tool(
   }
 );
 
-// TOOL 10: Read from shared memory channel
+// TOOL 12: Read from shared memory channel
 server.tool(
   "memory_read",
   {
@@ -420,7 +590,7 @@ server.tool(
   }
 );
 
-// TOOL 11: List shared memory channels
+// TOOL 13: List shared memory channels
 server.tool(
   "memory_channels",
   {},
@@ -463,7 +633,7 @@ server.tool(
 // AUTONOMY + HEARTBEAT TOOLS
 // =========================================================================
 
-// TOOL 12: Autonomy status
+// TOOL 14: Autonomy status
 server.tool(
   "autonomy_status",
   {},
@@ -511,7 +681,7 @@ server.tool(
   }
 );
 
-// TOOL 13: Set autonomy level
+// TOOL 15: Set autonomy level
 server.tool(
   "autonomy_set_level",
   {
@@ -555,7 +725,7 @@ server.tool(
   }
 );
 
-// TOOL 14: Spawn a sub-agent
+// TOOL 16: Spawn a sub-agent
 server.tool(
   "agent_spawn",
   {
@@ -605,7 +775,7 @@ server.tool(
   }
 );
 
-// TOOL 15: List sub-agents
+// TOOL 17: List sub-agents
 server.tool(
   "agent_list",
   {},
@@ -650,7 +820,7 @@ server.tool(
   }
 );
 
-// TOOL 16: Send message to a sub-agent
+// TOOL 18: Send message to a sub-agent
 server.tool(
   "agent_message",
   {
@@ -688,7 +858,7 @@ server.tool(
 // MEMORY INDEX + COORDINATION TOOLS
 // =========================================================================
 
-// TOOL 17: Search the memory index
+// TOOL 19: Search the memory index
 server.tool(
   "memory_search",
   {

@@ -11,7 +11,7 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
     const [payload, setPayload] = useState('');
     const [rootHashInput, setRootHashInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [result, setResult] = useState<any | null>(null);
+    const [result, setResult] = useState<unknown | null>(null);
     const [error, setError] = useState('');
     const [decryptedData, setDecryptedData] = useState('');
     const [showCascade, setShowCascade] = useState(false);
@@ -41,8 +41,9 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
             setShowCascade(true);
 
             setResult(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError(String(err));
         } finally {
             setIsLoading(false);
         }
@@ -63,8 +64,9 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Retrieve failed');
             setDecryptedData(data.decrypted);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError(String(err));
         } finally {
             setIsLoading(false);
         }
@@ -148,7 +150,7 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
                             </button>
 
                             <AnimatePresence>
-                                {result && (
+                                {!!result && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -159,9 +161,9 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
                                         </div>
                                         <div className="space-y-2">
                                             {[
-                                                { label: 'ROOT HASH', value: result.rootHash },
-                                                { label: 'TX HASH', value: result.txHash },
-                                                { label: 'SIZE', value: `${result.size} bytes` },
+                                                { label: 'ROOT HASH', value: (result as Record<string, string>).rootHash },
+                                                { label: 'TX HASH', value: (result as Record<string, string>).txHash },
+                                                { label: 'SIZE', value: `${(result as Record<string, string>).size} bytes` },
                                             ].map(({ label, value }) => (
                                                 <div key={label} className="flex items-center justify-between">
                                                     <span className="label-caps">{label}</span>
@@ -247,7 +249,7 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
                             <div className="label-caps mb-1">Session Root</div>
                             <div className="mono-hash text-primary">
                                 {(() => {
-                                    const root = events.find(e => e.type === 'session_commit')?.data?.merkleRoot;
+                                    const root = (events.find(e => e.type === 'session_commit')?.data as Record<string, string>)?.merkleRoot;
                                     return root ? root.slice(0, 24) + '...' : 'Awaiting first commit...';
                                 })()}
                             </div>
@@ -288,7 +290,7 @@ export function VaultPanel({ events, apiUrl }: { events: VaultEvent[]; apiUrl: s
                                                 </span>
                                             </div>
                                             <div className="mono-hash text-text-muted mt-1 truncate">
-                                                {event.data?.rootHash || event.data?.merkleRoot || '-'}
+                                                {(event.data as Record<string, string>)?.rootHash || (event.data as Record<string, string>)?.merkleRoot || '-'}
                                             </div>
                                         </div>
                                     </motion.div>

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-function CopyBlock({ code, lang: _lang = 'bash' }: { code: string; lang?: string }) {
+function CopyBlock({ code, lang = 'bash' }: { code: string; lang?: string }) {
     const [copied, setCopied] = useState(false);
     return (
         <div className="relative group">
-            <pre className="glass-panel rounded p-4 text-xs font-mono text-text-primary overflow-x-auto leading-relaxed">
+            <pre className={`glass-panel rounded p-4 text-xs font-mono text-text-primary overflow-x-auto leading-relaxed language-${lang}`}>
                 <code>{code}</code>
             </pre>
             <button
@@ -56,6 +56,7 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                     { label: 'Encrypted Storage', desc: 'AES-256-GCM + 0G decentralized storage' },
                     { label: 'Merkle Attestation', desc: 'Verifiable proof of agent behavior' },
                     { label: 'Multi-Agent Sharing', desc: 'Cross-agent encrypted memory transfer' },
+                    { label: 'DeFAI Guardrails', desc: 'Intent -> plan -> simulation -> user approval gate' },
                 ].map(({ label, desc }) => (
                     <div key={label} className="glass-panel rounded p-4">
                         <div className="text-xs font-semibold text-text-primary">{label}</div>
@@ -133,13 +134,13 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
                 </div>
             </div>
 
-            {/* Universal 4-Step Setup */}
+            {/* Universal Setup */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
                     <span className="label-caps">Universal Setup Guide (For Humans & AI Agents)</span>
                 </div>
                 <p className="text-sm text-text-muted mb-6 leading-relaxed">
-                    Follow these four steps to start your decentralized AI agent node, enable the MCP server for Claude/Cursor, and connect to the live dashboard.
+                    Follow these five steps to start your decentralized AI agent node, enable MCP tools for Claude/Cursor, and connect the hosted dashboard through ngrok.
                 </p>
 
                 <div className="space-y-4">
@@ -178,7 +179,7 @@ cd my-agent`} />
   }
 }`} />
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
-                            This gives your AI 17 powerful tools out-of-the-box (like <code className="text-text-primary">vault_store</code>, <code className="text-text-primary">session_commit</code>, etc.).
+                            This gives your AI 21 tools out-of-the-box (like <code className="text-text-primary">vault_store</code>, <code className="text-text-primary">defai_plan</code>, and <code className="text-text-primary">memory_write</code>).
                         </p>
                     </StepCard>
 
@@ -225,7 +226,7 @@ npm start`} />
                         <ul className="text-xs text-text-muted space-y-2 leading-relaxed list-decimal list-inside marker:text-primary mb-4">
                             <li>Open the Vercel dashboard link (the site you are on right now).</li>
                             <li>Look at the top right of the navigation bar. Click the <strong className="text-text-primary">Offline / URL</strong> indicator.</li>
-                            <li>Paste the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL you copied in Step 3.</li>
+                            <li>Paste the <code className="text-primary bg-primary/10 px-1 rounded">https://xxxx.ngrok-free.app</code> URL you copied in Step 4.</li>
                             <li>Press <strong className="text-text-primary">Enter</strong> to connect. The dashboard will instantly sync with your local node.</li>
                         </ul>
                     </StepCard>
@@ -236,14 +237,22 @@ npm start`} />
             <div className="glass-card rounded-lg p-6 text-center">
                 <h3 className="font-semibold text-text-primary mb-2">Ready to try it?</h3>
                 <p className="text-sm text-text-muted mb-4">
-                    Head to the Vault tab to store and retrieve encrypted data.
+                    Start with DEFAI for safe execution planning, then open Vault for encrypted memory.
                 </p>
-                <button
-                    onClick={() => onNavigate('vault')}
-                    className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 border border-primary/30 text-primary font-mono text-xs uppercase tracking-widest rounded hover:bg-primary/20 transition-all"
-                >
-                    Open Vault
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                    <button
+                        onClick={() => onNavigate('defai')}
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 border border-primary/30 text-primary font-mono text-xs uppercase tracking-widest rounded hover:bg-primary/20 transition-all"
+                    >
+                        Open DeFAI
+                    </button>
+                    <button
+                        onClick={() => onNavigate('vault')}
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-base border border-border text-text-primary font-mono text-xs uppercase tracking-widest rounded hover:border-primary/40 transition-all"
+                    >
+                        Open Vault
+                    </button>
+                </div>
             </div>
         </div>
     );

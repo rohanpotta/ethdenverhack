@@ -8,9 +8,98 @@ AI agents handle sensitive data — medical records, financial info, personal pr
 
 | Directory | What it does |
 |---|---|
-| **`0g-agent-shield/`** | Core library + MCP server (8 tools) + CLI tools (doctor, verify, demo) |
+| **`0g-agent-shield/`** | Core library + MCP server (21 tools total, including DeFAI tools) + CLI tools (doctor, verify, demo) |
 | **`0g-agent-shield-ui/`** | Real-time dashboard — Merkle tree visualization, event log, onboarding guide |
 | **`create-silo-app/`** | Scaffold CLI — `npx create-silo-app my-agent` generates a working project |
+
+## Judge Path (3 Minutes)
+
+Run this exact flow to validate the core promise: encrypted memory on 0G + verifiable attestation.
+
+1. Install and configure:
+```bash
+cd 0g-agent-shield
+npm install
+cp .env.example .env
+# Edit .env: PRIVATE_KEY, EVM_RPC, INDEXER_RPC
+```
+2. Validate environment:
+```bash
+npm run doctor
+```
+Expected: `✅ PRIVATE_KEY set`, `✅ EVM RPC reachable`, `✅ Wallet balance`, `✅ Encryption round-trip`, then `🎉 All checks passed`.
+
+3. Run end-to-end memory + proof flow:
+```bash
+npm run demo
+```
+Expected: `Stored!`, `Decrypted`, `Session attestation committed to 0G`, plus a `Merkle Root` and `Trace Hash`.
+
+## Friction Metric (Measured)
+
+- **One-command bootstrap artifact:** `npx create-silo-app my-agent`
+- **Measured on February 21, 2026:** `0.63s` to generate a ready project skeleton in offline-fast-fail mode
+- **Commands from scaffold to first full run:** `3` (`npm install`, `npm run build`, `npm run demo`)
+
+Full command transcript and measurement notes: `docs/friction-metrics.md`.
+
+## DeFAI + 0G Compute MVP Path
+
+SILO now includes a **DeFAI Safe Execution Copilot** flow:
+
+- Intent -> structured execution plan
+- Guardrails (`maxSlippageBps`, allowlist, timeout, notional caps)
+- Risk explanation + simulation preview
+- Explicit user approval gate before execution
+- Encrypted plan + approval artifacts stored on 0G with attestation trail
+
+Run terminal demo:
+
+```bash
+cd 0g-agent-shield
+npm run build
+npm run defai:demo
+```
+
+Optional 0G Compute integration:
+
+```bash
+export OG_COMPUTE_URL="https://your-0g-compute-endpoint"
+```
+
+When set, SILO attempts to fetch planning rationale from 0G Compute and falls back safely to local heuristics if unavailable.
+
+For the 0G starter-kit query API (`/api/services/query`), also set:
+
+```bash
+export OG_COMPUTE_PROVIDER_ADDRESS="0xyour_provider"
+export OG_COMPUTE_FALLBACK_FEE="0.01"
+```
+
+### One-Prompt MCP Demo (Compute)
+
+In Claude Desktop (with SILO MCP configured), paste:
+
+```text
+Use SILO MCP tools only. Do not use autonomy tools.
+1) Run defai_plan with:
+   intent: "Rebalance 500 USD from ETH to USDC with strict risk limits"
+   tokenIn: "ETH"
+   tokenOut: "USDC"
+   amountUsd: 500
+   maxSlippageBps: 75
+   timeoutSec: 90
+   maxNotionalUsd: 1000
+   tokenAllowlist: "ETH,USDC,DAI,WBTC"
+2) Save returned planId.
+3) Run defai_approve with:
+   planId: <that planId>
+   approved: true
+   reason: "User approved after reviewing simulation and risk rationale"
+4) Summarize compute provider used, rationale, and artifact root hashes.
+```
+
+On the dashboard/event log you should see `defai_plan` and `defai_approved` events.
 
 ## Quick Start
 
@@ -81,6 +170,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 No absolute paths needed — `npx` resolves the package automatically.
 
 Restart Claude Desktop. Your agent now has 8 vault tools: `vault_store`, `vault_retrieve`, `vault_share`, `vault_import`, `session_commit`, `vault_session_log`, `vault_balance`, `vault_status`.
+
+DeFAI MCP tools are also available: `defai_plan`, `defai_approve`.
 
 ### CLI Tools
 

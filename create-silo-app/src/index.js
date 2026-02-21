@@ -112,6 +112,13 @@ INDEXER_RPC=https://indexer-storage-testnet-turbo.0g.ai
 
 # Optional: custom encryption passphrase (defaults to PRIVATE_KEY)
 # VAULT_SECRET=your_custom_passphrase
+
+# Optional: 0G Compute endpoint for DeFAI rationale
+# OG_COMPUTE_URL=https://your-0g-compute-endpoint
+# OG_COMPUTE_MODEL=qwen-2.5-7b-instruct
+# OG_COMPUTE_API_KEY=optional_if_required
+# OG_COMPUTE_PROVIDER_ADDRESS=0x... # for starter-kit /api/services/query
+# OG_COMPUTE_FALLBACK_FEE=0.01
 `);
 done('.env');
 
@@ -134,6 +141,9 @@ writeFileSync(join(projectDir, 'claude-desktop-config.json'), JSON.stringify({
                 PRIVATE_KEY: 'your_private_key',
                 EVM_RPC: 'https://evmrpc-testnet.0g.ai',
                 INDEXER_RPC: 'https://indexer-storage-testnet-turbo.0g.ai',
+                OG_COMPUTE_URL: 'https://your-0g-compute-endpoint',
+                OG_COMPUTE_MODEL: 'qwen-2.5-7b-instruct',
+                OG_COMPUTE_PROVIDER_ADDRESS: '0xyour_provider_address',
             },
         },
     },
