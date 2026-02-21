@@ -172,7 +172,7 @@ cd my-agent`} />
   "mcpServers": {
     "silo": {
       "command": "npx",
-      "args": ["silo-agent", "mcp"],
+      "args": ["-y", "silo-agent@latest", "mcp"],
       "env": {
         "PRIVATE_KEY": "your_64_char_hex_key_here",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
@@ -181,6 +181,9 @@ cd my-agent`} />
     }
   }
 }`} />
+                        <p className="text-[11px] text-accent-gold mt-2 leading-relaxed">
+                            Use the <strong>Copy</strong> button on the code block. Do not hand-type this JSON. Then fully restart Claude Desktop.
+                        </p>
                         <p className="text-xs text-text-muted mt-2 leading-relaxed">
                             This gives your AI 21 tools out-of-the-box (like <code className="text-text-primary">vault_store</code>, <code className="text-text-primary">defai_plan</code>, and <code className="text-text-primary">memory_write</code>).
                         </p>
