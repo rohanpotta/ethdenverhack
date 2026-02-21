@@ -30,7 +30,7 @@ export function EventLog({ events }: { events: VaultEvent[] }) {
             <div className="flex items-center gap-6">
                 {(['store', 'retrieve', 'session_commit'] as const).map(type => {
                     const count = events.filter(e => e.type === type).length;
-                    const config = TYPE_CONFIG[type];
+                    const config = TYPE_CONFIG[type] || { color: 'text-gray-500', bg: 'bg-gray-500/10', border: 'border-gray-500/20', label: 'UNKNOWN' };
                     return (
                         <div key={type} className={`flex items-center gap-2 px-3 py-1.5 rounded ${config.bg} border ${config.border}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${config.color.replace('text-', 'bg-')}`} />
