@@ -102,6 +102,28 @@ Use SILO MCP tools only. Do not use autonomy tools.
 
 On the dashboard/event log you should see `defai_plan` and `defai_approved` events.
 
+### DeFAI Scenario Card (Judge-Ready)
+
+- Intent: `Rebalance 500 USD from ETH to USDC`
+- Guardrails: `maxSlippageBps=75`, `timeoutSec=90`, `maxNotionalUsd=1000`, allowlist=`ETH,USDC,DAI,WBTC`
+- AI output: structured plan with route preview, risk rationale, and simulation (`expectedOutUsd`, `minOutUsd`)
+- User control: explicit `defai_approve` / `defai_reject` gate before any execution
+- Evidence: plan + approval artifacts encrypted to 0G with attestation trail
+- Execution mode in this MVP: `dry_run_only` (no automatic transaction broadcast)
+
+### DeFAI Safety Guarantees
+
+- No transaction is auto-broadcast by SILO DeFAI MVP.
+- Guardrail violations block planning before approval.
+- User approval is mandatory and explicit for every plan.
+- Rejection path is first-class (`defai_rejected`) and halts execution intent.
+- Plan and approval artifacts are persisted on 0G for post-hoc auditability.
+
+### DeFAI Scope Boundary (Honest MVP)
+
+SILO currently stops at planning + safety + approval + dry-run execution payload.  
+Execution adapters are pluggable via `execute(plan)` style integration and intentionally out-of-scope for this MVP.
+
 ## Quick Start
 
 ### Option A: Scaffold a new agent (recommended)

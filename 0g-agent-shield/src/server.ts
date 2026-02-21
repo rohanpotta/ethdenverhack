@@ -240,6 +240,18 @@ app.post('/api/defai/plan', async (req, res) => {
 
         res.json({
             plan,
+            dryRunExecution: {
+                mode: 'dry_run_only',
+                adapter: 'pluggable_execute(plan)',
+                broadcast: false,
+                route: plan.preview.route,
+                minOutUsd: plan.preview.minOutUsd,
+                maxSlippageBps: plan.constraints.maxSlippageBps,
+                timeoutSec: plan.constraints.timeoutSec,
+                allowlist: plan.constraints.tokenAllowlist,
+                steps: plan.steps,
+                note: 'No transaction is broadcast by SILO in this MVP. This payload is preview-only.',
+            },
             artifact: {
                 rootHash: planStoreResult.rootHash,
                 txHash: planStoreResult.txHash,
@@ -288,6 +300,20 @@ app.post('/api/defai/approve', async (req, res) => {
             approved: Boolean(approved),
             userControl: 'User confirmation required before any transaction execution.',
             nextAction: approval.action,
+            dryRunExecution: {
+                mode: 'dry_run_only',
+                adapter: 'pluggable_execute(plan)',
+                broadcast: false,
+                route: plan.preview.route,
+                minOutUsd: plan.preview.minOutUsd,
+                maxSlippageBps: plan.constraints.maxSlippageBps,
+                timeoutSec: plan.constraints.timeoutSec,
+                allowlist: plan.constraints.tokenAllowlist,
+                steps: plan.steps,
+                note: approved
+                    ? 'Plan approved for manual handoff. Execution adapter not invoked in this MVP.'
+                    : 'Plan rejected by user. Execution is halted.',
+            },
             artifact: {
                 rootHash: approvalStore.rootHash,
                 txHash: approvalStore.txHash,

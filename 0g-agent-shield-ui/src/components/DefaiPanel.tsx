@@ -36,6 +36,18 @@ interface PlanResponse {
       rationale: string;
     };
   };
+  dryRunExecution?: {
+    mode: string;
+    adapter: string;
+    broadcast: boolean;
+    route: string[];
+    minOutUsd: number;
+    maxSlippageBps: number;
+    timeoutSec: number;
+    allowlist: string[];
+    steps: Array<{ id: string; action: string; description: string }>;
+    note: string;
+  };
   artifact: {
     rootHash: string;
     txHash: string;
@@ -232,6 +244,25 @@ export function DefaiPanel({ apiUrl }: DefaiPanelProps) {
             <div className="label-caps text-text-muted">Why This Plan</div>
             <p className="text-xs text-text-muted mt-1">{planData.plan.compute.rationale}</p>
           </div>
+
+          {planData.dryRunExecution && (
+            <div className="bg-base rounded border border-border p-3 space-y-2">
+              <div className="label-caps text-text-muted">Dry-Run Execution (No Broadcast)</div>
+              <div className="text-xs text-text-muted">
+                Adapter: <span className="text-text-primary">{planData.dryRunExecution.adapter}</span> · Broadcast:{" "}
+                <span className="text-text-primary">{planData.dryRunExecution.broadcast ? "yes" : "no"}</span>
+              </div>
+              <div className="text-xs text-text-muted">
+                Route: <span className="text-text-primary">{planData.dryRunExecution.route.join(" -> ")}</span>
+              </div>
+              <div className="text-xs text-text-muted">
+                Min Out: ${planData.dryRunExecution.minOutUsd} · Max Slip: {planData.dryRunExecution.maxSlippageBps} bps · Timeout: {planData.dryRunExecution.timeoutSec}s
+              </div>
+              <div className="text-xs text-text-muted">
+                Note: {planData.dryRunExecution.note}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <button
