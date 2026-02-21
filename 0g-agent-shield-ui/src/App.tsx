@@ -45,7 +45,7 @@ const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeView, setActiveView] = useState<View>('vault');
+  const [activeView, setActiveView] = useState<View>('guide');
   const [events, setEvents] = useState<VaultEvent[]>([]);
   const [connected, setConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
@@ -220,18 +220,27 @@ function App() {
 
           <button
             onClick={async () => {
+              if (!connected) return;
+              const btn = document.activeElement as HTMLButtonElement;
+              btn?.classList.add('animate-pulse');
               try {
                 const res = await fetch(`${API_URL}/api/attest`, { method: 'POST' });
                 if (!res.ok) {
-                  const err = await res.json();
-                  console.error('Commit failed:', err.error);
+                  const err = await res.json().catch(() => ({ error: 'Commit failed' }));
+                  alert(`Commit failed: ${err.error || 'Unknown error'}`);
                 }
-              } catch (e) {
-                console.error('Commit failed:', e);
+              } catch {
+                alert('Commit failed: backend not reachable');
+              } finally {
+                btn?.classList.remove('animate-pulse');
               }
             }}
-            className="w-10 h-10 flex items-center justify-center rounded-md text-text-muted hover:text-accent-commit hover:bg-accent-commit/10 transition-all duration-200"
-            title="COMMIT SESSION"
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 ${
+              connected
+                ? 'text-text-muted hover:text-accent-commit hover:bg-accent-commit/10'
+                : 'text-text-muted/30 cursor-not-allowed'
+            }`}
+            title={connected ? 'COMMIT SESSION' : 'Connect backend to commit'}
           >
             <GitCommitHorizontal className="w-4.5 h-4.5" />
           </button>

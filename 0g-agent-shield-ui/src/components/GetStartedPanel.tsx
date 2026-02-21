@@ -106,9 +106,11 @@ export function GetStartedPanel({ onNavigate }: { onNavigate: (view: string) => 
 cd ethdenverhack/0g-agent-shield
 npm install
 cp .env.example .env`} />
-                        <p className="text-xs text-text-muted mt-2">
+                        <p className="text-xs text-text-muted mt-2 leading-relaxed">
                             Edit <code className="text-primary bg-primary/10 px-1 rounded">.env</code> and
-                            add your private key (no 0x prefix). The key is used for encryption and 0G transactions.
+                            add your 0G/EVM wallet private key (64-char hex, no 0x prefix).
+                            Need a wallet? Export from MetaMask, or generate one: <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>.
+                            Fund it with testnet tokens at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
                     </StepCard>
 
@@ -131,15 +133,19 @@ npm run doctor`} />
       "command": "node",
       "args": ["/path/to/0g-agent-shield/build/mcp.js"],
       "env": {
-        "PRIVATE_KEY": "your_private_key",
+        "PRIVATE_KEY": "your_0g_wallet_private_key_no_0x_prefix",
         "EVM_RPC": "https://evmrpc-testnet.0g.ai",
         "INDEXER_RPC": "https://indexer-storage-testnet-turbo.0g.ai"
       }
     }
   }
 }`} />
-                        <p className="text-xs text-text-muted mt-2">
+                        <p className="text-xs text-text-muted mt-2 leading-relaxed">
                             Replace <code className="text-primary bg-primary/10 px-1 rounded">/path/to/</code> with the absolute path to your install.
+                            {' '}<code className="text-primary bg-primary/10 px-1 rounded">PRIVATE_KEY</code> is your 0G/EVM wallet private key (64-char hex, no 0x prefix).
+                            It's used to sign 0G Storage transactions and as the seed for AES-256 vault encryption.
+                            Generate one with MetaMask or <code className="text-primary bg-primary/10 px-1 rounded">node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>,
+                            then fund it at <a href="https://faucet.0g.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">faucet.0g.ai</a>.
                         </p>
                     </StepCard>
                 </div>
