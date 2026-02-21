@@ -182,8 +182,18 @@ cd my-agent`} />
                         </p>
                     </StepCard>
 
-                    {/* STEP 3: NODE & TUNNEL */}
-                    <StepCard step={3} title="Start Node & Ngrok Tunnel">
+                    {/* STEP 3: V2 CONTEXT */}
+                    <StepCard step={3} title="Provide V2 Context to Agents">
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            For SILO v2's Multi-Agent Shared Memory features to work correctly, your AI needs to understand the <b>Rules of Engagement</b>.
+                        </p>
+                        <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                            Copy everything inside the <code className="text-primary bg-primary/10 px-1 rounded">demo-context.md</code> file generated in your project root, and paste it to your Claude Desktop or Cursor chat <i>before</i> starting your work!
+                        </p>
+                    </StepCard>
+
+                    {/* STEP 4: NODE & TUNNEL */}
+                    <StepCard step={4} title="Start Node & Ngrok Tunnel">
                         <p className="text-xs text-text-muted mb-3 leading-relaxed">
                             Open two terminals inside your <code className="text-primary bg-primary/10 px-1 rounded">my-agent</code> folder.
                         </p>
@@ -207,8 +217,8 @@ npm start`} />
                         </div>
                     </StepCard>
 
-                    {/* STEP 4: DASHBOARD */}
-                    <StepCard step={4} title="Connect the Universal Dashboard">
+                    {/* STEP 5: DASHBOARD */}
+                    <StepCard step={5} title="Connect the Universal Dashboard">
                         <p className="text-xs text-text-muted mb-3 leading-relaxed">
                             Because you are running the backend locally via ngrok, you can use the hosted web dashboard without downloading frontend code.
                         </p>
