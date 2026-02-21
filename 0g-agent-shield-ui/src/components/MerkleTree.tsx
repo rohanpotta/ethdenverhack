@@ -128,7 +128,7 @@ export function MerkleTree({ events }: { events: VaultEvent[] }) {
             .attr('fill', 'none')
             .attr('stroke', d => {
                 const node = d.target.data;
-                return node.attested ? '#0066FF' : 'rgba(107, 114, 128, 0.4)';
+                return node.attested ? '#0066FF' : 'rgba(59, 130, 246, 0.28)';
             })
             .attr('stroke-width', 1.5)
             .each(function () {
@@ -159,13 +159,13 @@ export function MerkleTree({ events }: { events: VaultEvent[] }) {
                 return 6;
             })
             .attr('fill', d => {
-                if (d.data.type === 'root') return d.data.attested ? '#0066FF' : '#1a1a1a';
-                if (d.data.type === 'internal') return d.data.attested ? 'rgba(0, 102, 255, 0.4)' : '#1a1a1a';
-                return d.data.attested ? 'rgba(0, 102, 255, 0.6)' : 'rgba(107, 114, 128, 0.3)';
+                if (d.data.type === 'root') return d.data.attested ? '#0066FF' : '#05080F';
+                if (d.data.type === 'internal') return d.data.attested ? 'rgba(0, 102, 255, 0.4)' : '#05080F';
+                return d.data.attested ? 'rgba(0, 102, 255, 0.6)' : 'rgba(59, 130, 246, 0.22)';
             })
             .attr('stroke', d => {
                 if (d.data.type === 'root') return '#0066FF';
-                return d.data.attested ? 'rgba(0, 102, 255, 0.5)' : 'rgba(107, 114, 128, 0.3)';
+                return d.data.attested ? 'rgba(0, 102, 255, 0.5)' : 'rgba(59, 130, 246, 0.22)';
             })
             .attr('stroke-width', d => d.data.type === 'root' ? 2 : 1)
             .attr('opacity', 0)
@@ -208,7 +208,7 @@ export function MerkleTree({ events }: { events: VaultEvent[] }) {
                 return -14;
             })
             .attr('text-anchor', 'middle')
-            .attr('fill', d => d.data.attested ? 'rgba(0, 102, 255, 0.8)' : 'rgba(107, 114, 128, 0.6)')
+            .attr('fill', d => d.data.attested ? 'rgba(0, 102, 255, 0.8)' : 'rgba(96, 165, 250, 0.7)')
             .attr('font-family', '"JetBrains Mono", monospace')
             .attr('font-size', d => d.data.type === 'root' ? '11px' : '9px')
             .attr('opacity', 0)
@@ -222,7 +222,7 @@ export function MerkleTree({ events }: { events: VaultEvent[] }) {
             .append('text')
             .attr('dy', 30)
             .attr('text-anchor', 'middle')
-            .attr('fill', 'rgba(107, 114, 128, 0.5)')
+            .attr('fill', 'rgba(96, 165, 250, 0.65)')
             .attr('font-family', '"JetBrains Mono", monospace')
             .attr('font-size', '8px')
             .attr('text-transform', 'uppercase')

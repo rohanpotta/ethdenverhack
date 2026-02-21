@@ -89,7 +89,7 @@ export function AgentsPanel({ events }: { events: VaultEvent[] }) {
                         <path
                             d="M 5 50 C 25 50, 35 50, 55 50"
                             fill="none"
-                            stroke="rgba(255, 255, 255, 0.08)"
+                            stroke="rgba(59, 130, 246, 0.24)"
                             strokeWidth="1"
                             strokeDasharray="4 4"
                         />

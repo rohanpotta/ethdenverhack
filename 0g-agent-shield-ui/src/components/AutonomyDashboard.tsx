@@ -28,7 +28,7 @@ export function AutonomyDashboard({ events }: { events: VaultEvent[] }) {
                 <div>
                     <h2 className="font-mono text-lg font-semibold tracking-wide flex items-center gap-2">
                         {isActive ? (
-                            <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" style={{ boxShadow: '0 0 10px rgba(100, 255, 218, 0.5)' }}></span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" style={{ boxShadow: '0 0 10px rgba(0, 102, 255, 0.5)' }}></span>
                         ) : (
                             <span className="w-2.5 h-2.5 rounded-full bg-text-muted/40"></span>
                         )}
@@ -116,7 +116,7 @@ export function AutonomyDashboard({ events }: { events: VaultEvent[] }) {
                                 <div className="bg-base-elevated/40 border border-border/80 rounded-md p-3 group hover:border-accent-agent/50 transition-colors">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded bg-accent-agent/80 shadow-[0_0_8px_rgba(255,107,255,0.4)]" />
+                                            <span className="w-2 h-2 rounded bg-accent-agent/80 shadow-[0_0_8px_rgba(0,102,255,0.4)]" />
                                             <span className="font-mono text-xs font-bold text-text-primary capitalize">
                                                 {spawn.data.role || 'Worker'} Agent
                                             </span>

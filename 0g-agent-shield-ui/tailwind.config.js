@@ -9,29 +9,31 @@ export default {
             colors: {
                 base: {
                     DEFAULT: '#000000',
-                    surface: '#0A0A0A',
-                    elevated: '#141414',
-                    card: '#0A0A0A',
+                    surface: '#05080F',
+                    elevated: '#0A1222',
+                    card: '#060B14',
                 },
                 primary: {
                     DEFAULT: '#0066FF',
                     soft: '#60A5FA',
                 },
                 accent: {
-                    gold: '#F5A623',
-                    rose: '#EC4899',
-                    commit: '#34D399',
+                    gold: '#3B82F6',
+                    rose: '#60A5FA',
+                    commit: '#2563EB',
                     store: '#60A5FA',
-                    retrieve: '#FBBF24',
-                    danger: '#F43F5E',
+                    retrieve: '#3B82F6',
+                    danger: '#1D4ED8',
+                    warn: '#2563EB',
+                    agent: '#3B82F6',
                 },
                 text: {
-                    primary: '#E5E7EB',
-                    muted: '#6B7280',
+                    primary: '#BFDBFE',
+                    muted: '#60A5FA',
                 },
                 border: {
-                    DEFAULT: 'rgba(255, 255, 255, 0.08)',
-                    strong: 'rgba(255, 255, 255, 0.15)',
+                    DEFAULT: 'rgba(59, 130, 246, 0.18)',
+                    strong: 'rgba(96, 165, 250, 0.3)',
                 },
             },
             fontFamily: {

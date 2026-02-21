@@ -34,7 +34,7 @@ export function EventLog({ events }: { events: VaultEvent[] }) {
             <div className="flex items-center gap-6">
                 {(['store', 'retrieve', 'session_commit'] as const).map(type => {
                     const count = events.filter(e => e.type === type).length;
-                    const config = TYPE_CONFIG[type] || { color: 'text-gray-500', bg: 'bg-gray-500/10', border: 'border-gray-500/20', label: 'UNKNOWN' };
+                    const config = TYPE_CONFIG[type] || { color: 'text-primary-soft', bg: 'bg-primary/10', border: 'border-primary/20', label: 'UNKNOWN' };
                     return (
                         <div key={type} className={`flex items-center gap-2 px-3 py-1.5 rounded ${config.bg} border ${config.border}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${config.color.replace('text-', 'bg-')}`} />
@@ -72,8 +72,8 @@ export function EventLog({ events }: { events: VaultEvent[] }) {
                                 >
                                     <div className="col-span-1 font-mono text-xs text-text-muted">{event.id}</div>
                                     <div className="col-span-2 flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${config?.color ? config.color.replace('text-', 'bg-') : 'bg-gray-500'}`} />
-                                        <span className={`font-mono text-[11px] uppercase tracking-widest ${config?.color || 'text-gray-500'}`}>{config?.label || event.type || 'UNKNOWN'}</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${config?.color ? config.color.replace('text-', 'bg-') : 'bg-primary-soft'}`} />
+                                        <span className={`font-mono text-[11px] uppercase tracking-widest ${config?.color || 'text-primary-soft'}`}>{config?.label || event.type || 'UNKNOWN'}</span>
                                     </div>
                                     <div className="col-span-1">
                                         <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider ${event.source === 'mcp' ? 'bg-primary/10 text-primary' : 'bg-accent-store/10 text-accent-store'

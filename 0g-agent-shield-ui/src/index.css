@@ -7,22 +7,22 @@
 /* Design Tokens */
 :root {
   --bg-base: #000000;
-  --bg-surface: #0A0A0A;
-  --bg-elevated: #141414;
+  --bg-surface: #05080F;
+  --bg-elevated: #0A1222;
   --primary: #0066FF;
   --primary-soft: #60A5FA;
-  --accent-gold: #F5A623;
-  --accent-rose: #EC4899;
-  --accent-commit: #34D399;
+  --accent-gold: #3B82F6;
+  --accent-rose: #60A5FA;
+  --accent-commit: #2563EB;
   --accent-store: #60A5FA;
-  --accent-retrieve: #FBBF24;
-  --accent-danger: #F43F5E;
-  --text-primary: #E5E7EB;
-  --text-muted: #6B7280;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --accent-retrieve: #3B82F6;
+  --accent-danger: #1D4ED8;
+  --text-primary: #BFDBFE;
+  --text-muted: #60A5FA;
+  --border: rgba(59, 130, 246, 0.18);
+  --border-strong: rgba(96, 165, 250, 0.3);
   --glow: rgba(0, 102, 255, 0.4);
-  --glow-gold: rgba(245, 166, 35, 0.3);
+  --glow-gold: rgba(59, 130, 246, 0.3);
 }
 
 @property --conic-angle {
@@ -40,7 +40,7 @@
 
   ::selection {
     background: rgba(0, 102, 255, 0.3);
-    color: #E5E7EB;
+    color: #BFDBFE;
   }
 }
 
@@ -219,12 +219,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(59, 130, 246, 0.35);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(96, 165, 250, 0.55);
 }
 
 @keyframes rotate-conic {

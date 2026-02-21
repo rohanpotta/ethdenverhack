@@ -48,7 +48,7 @@ export function CommitCeremony({
                         size: 1 + Math.random() * 3,
                         life: 1,
                         decay: 0.015 + Math.random() * 0.01,
-                        color: Math.random() > 0.3 ? [0, 102, 255] : [255, 255, 255],
+                        color: Math.random() > 0.3 ? [0, 102, 255] : [96, 165, 250],
                     };
                 });
 
@@ -102,7 +102,7 @@ export function CommitCeremony({
             <AnimatePresence>
                 {flashActive && (
                     <motion.div
-                        className="absolute inset-0 bg-white"
+                        className="absolute inset-0 bg-primary"
                         initial={{ opacity: 0.8 }}
                         animate={{ opacity: 0 }}
                         exit={{ opacity: 0 }}
