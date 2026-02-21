@@ -136,7 +136,7 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fillStyle = isBlue
                     ? `rgba(0, 102, 255, ${p.alpha})`
-                    : `rgba(${60 + Math.random() * 40}, ${80 + Math.random() * 60}, ${200 + Math.random() * 55}, ${p.alpha * 0.6})`;
+                    : `rgba(0, 78, 210, ${p.alpha * 0.6})`;
                 ctx.fill();
             }
 
@@ -157,13 +157,13 @@ export function ColdOpen({ onComplete }: { onComplete: () => void }) {
                 if (subT > 0) {
                     ctx.font = '11px "Inter", system-ui, sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillStyle = `rgba(107, 114, 128, ${subT * 0.7})`;
+                    ctx.fillStyle = `rgba(0, 120, 255, ${subT * 0.55})`;
                     ctx.fillText('ENCRYPTED AGENT MEMORY', W / 2, H / 2 + 90);
                 }
             }
 
             for (let n = 0; n < 40; n++) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.05})`;
+                ctx.fillStyle = `rgba(0, 102, 255, ${Math.random() * 0.04})`;
                 ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
             }
 
