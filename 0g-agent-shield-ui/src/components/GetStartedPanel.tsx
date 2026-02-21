@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, Copy, Check, Terminal, Shield, Key, Zap, Users, ArrowRight } from 'lucide-react';
 
-function CopyBlock({ code, lang = 'bash' }: { code: string; lang?: string }) {
+function CopyBlock({ code, lang: _lang = 'bash' }: { code: string; lang?: string }) {
     const [copied, setCopied] = useState(false);
     return (
         <div className="relative group">

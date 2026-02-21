@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 
 /**
@@ -216,7 +216,7 @@ export function MerkleTree({ events }: { events: VaultEvent[] }) {
             .attr('values', '14;22;14')
             .attr('dur', '2s')
             .attr('repeatCount', 'indefinite')
-            .append(); // close
+            .append('animate'); // close animation element
 
         nodeGroups.filter(d => d.data.type === 'root')
             .append('circle')
